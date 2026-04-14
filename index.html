@@ -1117,24 +1117,38 @@
             }
         }
 
-        @media(max-width:1024px) {
-            :root { --sidebar-w: 210px; }
-            .content { padding: 24px; }
+        /* ─── TABLET: 1024–1100 ─── */
+        @media (max-width: 1100px) {
+            :root { --sidebar-w: 0px; }
+            .sidebar { transform: translateX(-100%); width: 260px; }
+            .sidebar.open { transform: translateX(0); }
+            .sidebar-overlay.show { display: block; }
+            .main { margin-left: 0; width: 100vw; }
+            .hamburger { display: flex; }
+            .topbar { padding: 0 16px; }
+            .content { padding: 20px; }
         }
 
         /* ─── MOBILE: ≤768 ─── */
-        @media(max-width:768px) {
-            .sidebar { transform: translateX(-100%); width: 260px; }
-            .sidebar.open { transform: translateX(0); }
-            .main { margin-left: 0; padding-bottom: var(--bottom-nav-h); }
-            .hamburger { display: flex; }
-            .topbar { padding: 0 16px; }
-            .topbar h1 { font-size: 16px; }
-            .content { padding: 16px 16px 24px; }
-
-            /* Switch to cards view */
+        @media (max-width: 768px) {
+            :root { --bottom-nav-h: 64px; }
+            .main { padding-bottom: var(--bottom-nav-h); width: 100%; overflow-x: hidden; }
+            .content { padding: 16px 12px 24px; }
+            .card { padding: 16px; border-radius: 8px; margin-bottom: 16px; width: 100%; }
+            .card-title { font-size: 16px; margin-bottom: 14px; padding-bottom: 10px; }
+            .topbar h1 { font-size: 17px; }
+            .session-badge { display: none; }
+            
             .results-table-wrap { display: none; }
-            .student-cards { display: block; }
+            .student-cards { display: block; width: 100%; }
+            .bottom-nav { display: grid; }
+            
+            .stat-card { padding: 16px 10px; }
+            .stat-card .number { font-size: 24px; }
+            .stat-card .label { font-size: 9px; margin-top: 4px; }
+
+            .btn-row { flex-direction: column; gap: 8px; }
+            .btn-row .btn { width: 100%; }
 
             /* Table Scroll exceptions */
             .table-scroll { display: none; }
@@ -1574,15 +1588,15 @@
     <!-- BOTTOM NAV -->
     <nav class="bottom-nav" id="bottom-nav">
         <div class="bottom-nav-item active" id="bn-dashboard" onclick="showPage('dashboard')" data-page="dashboard"><span
-                class="bn-icon">📊</span><span class="bn-label">Home</span></div>
-        <div class="bottom-nav-item" id="bn-add-student" onclick="showPage('add-student')" data-page="add-student"><span class="bn-icon">➕</span><span
+                class="bn-icon">🏠</span><span class="bn-label">Home</span></div>
+        <div class="bottom-nav-item" id="bn-add-student" onclick="showPage('add-student')" data-page="add-student"><span class="bn-icon">🧑‍🎓</span><span
                 class="bn-label">Student</span></div>
-        <div class="bottom-nav-item" id="bn-add-marks" onclick="showPage('add-marks')" data-page="add-marks"><span class="bn-icon">📝</span><span
+        <div class="bottom-nav-item" id="bn-add-marks" onclick="showPage('add-marks')" data-page="add-marks"><span class="bn-icon">📑</span><span
                 class="bn-label">Marks</span></div>
         <div class="bottom-nav-item" id="bn-search" onclick="showPage('search')" data-page="search"><span
                 class="bn-icon">🔍</span><span class="bn-label">Search</span></div>
         <div class="bottom-nav-item" id="bn-classwise" onclick="showPage('classwise')" data-page="classwise"><span
-                class="bn-icon">📋</span><span class="bn-label">Classes</span></div>
+                class="bn-icon">🏢</span><span class="bn-label">Classes</span></div>
     </nav>
 
     <div class="toast" id="toast"></div>
@@ -1727,7 +1741,10 @@
         // ─── PAGE NAVIGATION ───
         function getGrade(p) { p = Number(p); if (p >= 91) return 'A+'; if (p >= 81) return 'A'; if (p >= 71) return 'B+'; if (p >= 61) return 'B'; if (p >= 51) return 'C+'; if (p >= 41) return 'C'; if (p >= 33) return 'D'; return 'E'; }
         function gClass(g) { return 'grade-' + (g === 'A+' ? 'Ap' : g === 'B+' ? 'Bp' : g === 'C+' ? 'Cp' : g); }
-        function gBadge(g) { return `<span class="grade-badge ${gClass(g)}">${g}</span>`; }
+        function gBadge(g) { 
+            if(!g || g === 'null' || g === 'undefined') return '';
+            return `<span class="grade-badge ${gClass(g)}">${g}</span>`; 
+        }
         function isHighAccess() {
             if (!currentUser || !currentUser.role) return false;
             const r = currentUser.role.toLowerCase();
@@ -2140,15 +2157,22 @@
         // ─── STUDENT CARD (mobile) ───
         function sCard(s) {
             const status = getStudentStatus(s);
+            const pct = s.percentage !== null && s.percentage !== undefined ? s.percentage : 0;
+            const obtd = s.grand_total_obtained !== null && s.grand_total_obtained !== undefined ? s.grand_total_obtained : 0;
+            const max = s.grand_total_marks !== null && s.grand_total_marks !== undefined ? s.grand_total_marks : 0;
+            const name = s.name || 'Unknown Student';
+            const roll = s.roll_number || '—';
+            const fName = s.father_name || '—';
+            
             return `<div class="student-card">
     <div class="sc-header">
-        <div class="sc-name">${s.name} <span title="${status.label}" style="cursor:help;font-size:14px">${status.icon}</span></div>
+        <div class="sc-name">${name} <span title="${status.label}" style="cursor:help;font-size:14px">${status.icon}</span></div>
         ${gBadge(s.grade)}
     </div>
-    <div class="sc-meta">${s.class} | Roll: ${s.roll_number || '—'} | ${s.father_name || ''}</div>
+    <div class="sc-meta">${s.class} | Roll: ${roll} | ${fName}</div>
     <div class="sc-stats">
-      <span style="font-family:'DM Mono',monospace;font-size:13px;font-weight:700;color:var(--gold)">${s.percentage}%</span>
-      <span style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace">${s.grand_total_obtained}/${s.grand_total_marks}</span>
+      <span style="font-family:'DM Mono',monospace;font-size:13px;font-weight:700;color:var(--gold)">${pct}%</span>
+      <span style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace">${obtd}/${max}</span>
     </div>
     <div class="sc-actions" style="margin-top:12px; border-top:1px solid var(--border); padding-top:10px">
       <button class="btn btn-info btn-sm" title="Preview" onclick="previewStudent('${s.id}')">👁️ Preview</button>
