@@ -1756,7 +1756,7 @@
             if (!currentUser || !currentUser.role) return false;
             const r = currentUser.role.toLowerCase();
             if (r === 'admin' || r === 'director') return true;
-            if (r === 'teacher') return ['dashboard', 'add-student', 'add-marks'].includes(page);
+            if (r === 'teacher') return ['dashboard', 'add-student', 'add-marks', 'preview'].includes(page);
             return ['add-marks'].includes(page); 
         }
 
