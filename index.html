@@ -1379,6 +1379,13 @@
                         <div class="label">Avg %</div>
                     </div>
                 </div>
+                <div class="card" id="pending-actions-card" style="display:none; border-color: var(--red);">
+                    <div class="card-title" style="color:var(--red)">⚠️ Pending Actions (Missing Marks/Info)</div>
+                    <div id="pending-list">
+                        <div class="loading">Analyzing records...</div>
+                    </div>
+                </div>
+
                 <div class="card">
                     <div class="card-title">📌 Recent Entries</div>
                     <div id="recent-list">
@@ -2197,21 +2204,25 @@
                 
                 document.getElementById('stat-total').textContent = data.length;
                 
-                // Class-wise Summary Logic
+                // Analytics & Pending Logic
                 const classSummary = {};
                 let totalPending = 0;
+                const pendingStudents = [];
+
                 data.forEach(s => {
                     const cls = s.class || 'Unknown';
                     if (!classSummary[cls]) {
                         classSummary[cls] = { total: 0, complete: 0, pending: 0 };
                     }
                     classSummary[cls].total++;
+                    
                     const status = getStudentStatus(s);
                     if (status.label === 'Complete') {
                         classSummary[cls].complete++;
                     } else {
                         classSummary[cls].pending++;
                         totalPending++;
+                        pendingStudents.push({ ...s, statusObj: status });
                     }
                 });
 
@@ -2219,6 +2230,39 @@
                 document.getElementById('stat-aplus').textContent = data.filter(d => d.grade === 'A+').length;
                 const avg = data.length ? Math.round(data.reduce((s, d) => s + (d.percentage || 0), 0) / data.length) : 0;
                 document.getElementById('stat-avg').textContent = avg + '%';
+
+                // ─── RENDER PENDING ACTIONS (Admin/Director Only) ───
+                const pendingCard = document.getElementById('pending-actions-card');
+                if (isHighAccess() && pendingStudents.length > 0) {
+                    pendingCard.style.display = 'block';
+                    const list = document.getElementById('pending-list');
+                    // Show top 15 pending students
+                    const topPending = pendingStudents.slice(0, 15);
+                    list.innerHTML = `
+                        <div class="results-table-wrap">
+                            <div class="table-scroll">
+                                <table class="results-table">
+                                    <thead><tr><th>Student</th><th>Class</th><th>Required Action</th><th>Fix</th></tr></thead>
+                                    <tbody>${topPending.map(s => `
+                                        <tr>
+                                            <td><strong>${s.name}</strong></td>
+                                            <td><span class="session-badge" style="display:inline-block">${s.class}</span></td>
+                                            <td><span style="color:var(--red); font-weight:600; font-size:11px">${s.statusObj.label}</span></td>
+                                            <td>
+                                                <div class="action-btns">
+                                                    <button class="btn btn-primary btn-sm" title="Add Marks" onclick="enterMarks('${s.id}')">📝</button>
+                                                    <button class="btn btn-secondary btn-sm" title="Edit Info" onclick="editStudent('${s.id}')">✏️</button>
+                                                </div>
+                                            </td>
+                                        </tr>`).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        ${pendingStudents.length > 15 ? `<p style="font-size:11px; color:var(--muted); margin-top:10px; text-align:center">+${pendingStudents.length - 15} more students need attention.</p>` : ''}`;
+                } else {
+                    pendingCard.style.display = 'none';
+                }
 
                 const classOrder = ['Nursery', 'KG-I', 'KG-II', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th'];
                 const sortedClasses = Object.keys(classSummary).sort((a, b) => {
