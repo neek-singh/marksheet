@@ -273,7 +273,7 @@
         /* STATS Grid */
         .stats-row {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(5, 1fr);
             gap: 20px;
             margin-bottom: 24px;
         }
@@ -1367,8 +1367,12 @@
                         <div class="label">Total Students</div>
                     </div>
                     <div class="stat-card">
+                        <div class="number" id="stat-info-pending" style="color:#e67e22">—</div>
+                        <div class="label">Info Pending</div>
+                    </div>
+                    <div class="stat-card">
                         <div class="number" id="stat-pending" style="color:var(--red)">—</div>
-                        <div class="label">Pending Marks</div>
+                        <div class="label">Marks Pending</div>
                     </div>
                     <div class="stat-card">
                         <div class="number" id="stat-aplus">—</div>
@@ -2206,7 +2210,8 @@
                 
                 // Analytics & Pending Logic
                 const classSummary = {};
-                let totalPending = 0;
+                let totalMarksPending = 0;
+                let totalInfoPending = 0;
                 const pendingStudents = [];
 
                 data.forEach(s => {
@@ -2221,12 +2226,15 @@
                         classSummary[cls].complete++;
                     } else {
                         classSummary[cls].pending++;
-                        totalPending++;
                         pendingStudents.push({ ...s, statusObj: status });
+                        
+                        if (status.label === 'Marks Pending') totalMarksPending++;
+                        else if (status.label === 'Info Missing') totalInfoPending++;
                     }
                 });
 
-                document.getElementById('stat-pending').textContent = totalPending;
+                document.getElementById('stat-pending').textContent = totalMarksPending;
+                document.getElementById('stat-info-pending').textContent = totalInfoPending;
                 document.getElementById('stat-aplus').textContent = data.filter(d => d.grade === 'A+').length;
                 const avg = data.length ? Math.round(data.reduce((s, d) => s + (d.percentage || 0), 0) / data.length) : 0;
                 document.getElementById('stat-avg').textContent = avg + '%';
