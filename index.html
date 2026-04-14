@@ -1,0 +1,2919 @@
+<!DOCTYPE html>
+<html lang="hi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Shri Hans Vidya Niketan — Marksheet</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=DM+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --ink: #1a1208;
+            --paper: #fdf8ef;
+            --cream: #f5edd8;
+            --gold: #b8860b;
+            --gold-light: #d4a843;
+            --red: #8b1a1a;
+            --green: #1a5c2a;
+            --border: #c8a96e;
+            --muted: #7a6a4a;
+            --shadow: rgba(26, 18, 8, 0.15);
+            --sidebar-bg: #1a1208;
+            --sidebar-text: #e8d5a3;
+            --card: #fffdf7;
+            --input-bg: #fffcf5;
+            --sidebar-w: 240px;
+            --topbar-h: 56px;
+            --bottom-nav-h: 64px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html,
+        body {
+            height: 100%;
+            overflow-x: hidden;
+        }
+
+        body {
+            font-family: 'EB Garamond', Georgia, serif;
+            background: var(--paper);
+            color: var(--ink);
+            min-height: 100vh;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: var(--sidebar-w);
+            height: 100vh;
+            background: var(--sidebar-bg);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 200;
+            border-right: 2px solid var(--gold);
+            transition: transform 0.3s ease;
+            overflow-y: auto;
+        }
+
+        .sidebar-logo {
+            padding: 22px 18px 18px;
+            border-bottom: 1px solid rgba(184, 134, 11, 0.3);
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .school-emblem {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: var(--gold);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-size: 20px;
+            color: var(--sidebar-bg);
+            font-weight: 700;
+            border: 2px solid var(--gold-light);
+        }
+
+        .sidebar-logo h2 {
+            color: var(--gold-light);
+            font-size: 11px;
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+            line-height: 1.5;
+        }
+
+        .sidebar-logo p {
+            color: rgba(232, 213, 163, 0.45);
+            font-size: 9px;
+            margin-top: 3px;
+            font-family: 'DM Mono', monospace;
+        }
+
+        .sidebar-nav {
+            padding: 12px 0;
+            flex: 1;
+        }
+
+        .nav-label {
+            color: rgba(232, 213, 163, 0.35);
+            font-size: 9px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            padding: 8px 18px 4px;
+            font-family: 'DM Mono', monospace;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 11px 18px;
+            color: var(--sidebar-text);
+            cursor: pointer;
+            font-size: 14px;
+            border-left: 3px solid transparent;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .nav-item:hover {
+            background: rgba(184, 134, 11, 0.1);
+            color: var(--gold-light);
+        }
+
+        .nav-item.active {
+            background: rgba(184, 134, 11, 0.15);
+            border-left-color: var(--gold);
+            color: var(--gold-light);
+        }
+
+        .nav-item .icon {
+            font-size: 17px;
+            width: 22px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 190;
+        }
+
+        .sidebar-overlay.show {
+            display: block;
+        }
+
+        /* MAIN */
+        .main {
+            margin-left: var(--sidebar-w);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* TOPBAR */
+        .topbar {
+            height: var(--topbar-h);
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            gap: 12px;
+        }
+
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .hamburger {
+            display: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 4px;
+            color: var(--ink);
+            font-size: 22px;
+            line-height: 1;
+        }
+
+        .topbar h1 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--ink);
+            letter-spacing: 0.02em;
+            white-space: nowrap;
+        }
+
+        .session-badge {
+            background: var(--cream);
+            border: 1px solid var(--border);
+            color: var(--muted);
+            font-size: 11px;
+            padding: 3px 10px;
+            border-radius: 2px;
+            font-family: 'DM Mono', monospace;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        /* CONTENT */
+        .content {
+            padding: 24px;
+            flex: 1;
+            max-width: 100%;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* CARDS */
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .card-title {
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--ink);
+            margin-bottom: 18px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--cream);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* STATS */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 18px 12px;
+            text-align: center;
+            box-shadow: 0 1px 4px var(--shadow);
+        }
+
+        .stat-card .number {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--gold);
+            font-family: 'DM Mono', monospace;
+            line-height: 1;
+        }
+
+        .stat-card .label {
+            font-size: 10px;
+            color: var(--muted);
+            margin-top: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-family: 'DM Mono', monospace;
+        }
+
+        /* FORM */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        label {
+            font-size: 11px;
+            color: var(--muted);
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+            font-family: 'DM Mono', monospace;
+        }
+
+        input,
+        select {
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 9px 12px;
+            font-family: 'EB Garamond', serif;
+            font-size: 15px;
+            color: var(--ink);
+            outline: none;
+            transition: border-color 0.2s;
+            width: 100%;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%237a6a4a' d='M5 6L0 0h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 32px;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: var(--gold);
+            box-shadow: 0 0 0 2px rgba(184, 134, 11, 0.12);
+        }
+
+        /* MARKS TOTAL ROW */
+        .marks-total-row {
+            display: flex;
+            gap: 14px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+
+        .marks-total-row .form-group {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        /* TABLE SCROLL */
+        .table-scroll {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* MARKS TABLE */
+        .marks-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            min-width: 620px;
+        }
+
+        .marks-table th {
+            background: var(--sidebar-bg);
+            color: var(--gold-light);
+            padding: 9px 10px;
+            text-align: left;
+            font-size: 10px;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            font-family: 'DM Mono', monospace;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .marks-table td {
+            padding: 7px 10px;
+            border-bottom: 1px solid var(--cream);
+            vertical-align: middle;
+        }
+
+        .marks-table tr:hover td {
+            background: var(--cream);
+        }
+
+        .marks-table input {
+            width: 66px;
+            padding: 5px 6px;
+            font-size: 13px;
+            text-align: center;
+        }
+
+        .subject-name {
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .computed-cell {
+            font-family: 'DM Mono', monospace;
+            font-size: 12px;
+            color: var(--muted);
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        /* MOBILE MARKS CARDS */
+        .marks-cards {
+            display: none;
+        }
+
+        .marks-card-item {
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 14px;
+            margin-bottom: 12px;
+            background: var(--input-bg);
+        }
+
+        .marks-card-subject {
+            font-weight: 700;
+            font-size: 15px;
+            margin-bottom: 10px;
+            color: var(--ink);
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--cream);
+        }
+
+        .marks-card-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .marks-card-section {
+            background: var(--cream);
+            border-radius: 4px;
+            padding: 10px;
+        }
+
+        .marks-card-section-title {
+            font-size: 10px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            font-family: 'DM Mono', monospace;
+            margin-bottom: 6px;
+        }
+
+        .marks-card-section input {
+            font-size: 16px;
+            text-align: center;
+            padding: 7px;
+        }
+
+        .marks-card-computed {
+            font-family: 'DM Mono', monospace;
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 4px;
+            text-align: center;
+        }
+
+        .marks-card-total {
+            background: var(--cream);
+            border-radius: 4px;
+            padding: 8px 10px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            font-size: 13px;
+        }
+
+        /* GRAND TOTAL BOX */
+        .grand-total-box {
+            background: var(--cream);
+            border: 2px solid var(--gold);
+            border-radius: 6px;
+            padding: 14px;
+            margin-top: 14px;
+        }
+
+        .grand-total-box .gt-title {
+            font-weight: 700;
+            font-size: 14px;
+            margin-bottom: 10px;
+            font-family: 'DM Mono', monospace;
+            color: var(--ink);
+        }
+
+        .grand-total-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .gt-cell {
+            text-align: center;
+        }
+
+        .gt-label {
+            font-size: 10px;
+            color: var(--muted);
+            font-family: 'DM Mono', monospace;
+            text-transform: uppercase;
+        }
+
+        .gt-val {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--gold);
+            font-family: 'DM Mono', monospace;
+        }
+
+        /* BUTTONS */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 9px 18px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: 'EB Garamond', serif;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+            letter-spacing: 0.02em;
+            white-space: nowrap;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .btn-primary {
+            background: var(--gold);
+            color: var(--sidebar-bg);
+        }
+
+        .btn-primary:hover {
+            background: var(--gold-light);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--gold);
+            border: 1px solid var(--gold);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(184, 134, 11, 0.08);
+        }
+
+        .btn-danger {
+            background: transparent;
+            color: var(--red);
+            border: 1px solid var(--red);
+            padding: 5px 11px;
+            font-size: 12px;
+        }
+
+        .btn-danger:hover {
+            background: rgba(139, 26, 26, 0.08);
+        }
+
+        .btn-success {
+            background: var(--green);
+            color: #fff;
+        }
+
+        .btn-success:hover {
+            background: #1e6b31;
+        }
+
+        .btn-sm {
+            padding: 5px 11px;
+            font-size: 12px;
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        /* SEARCH BAR */
+        .search-bar {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 12px;
+            margin-bottom: 20px;
+            align-items: flex-end;
+        }
+
+        /* RESULTS TABLE */
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .results-table th {
+            background: var(--cream);
+            color: var(--muted);
+            font-size: 10px;
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+            padding: 9px 12px;
+            text-align: left;
+            font-family: 'DM Mono', monospace;
+            font-weight: 500;
+            border-bottom: 2px solid var(--border);
+            white-space: nowrap;
+        }
+
+        .results-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--cream);
+            font-size: 13px;
+        }
+
+        .results-table tr:hover td {
+            background: var(--cream);
+        }
+
+        /* MOBILE STUDENT CARDS */
+        .student-cards {
+            display: none;
+        }
+
+        .student-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 14px;
+            margin-bottom: 10px;
+            box-shadow: 0 1px 4px var(--shadow);
+        }
+
+        .sc-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 6px;
+        }
+
+        .sc-name {
+            font-weight: 700;
+            font-size: 15px;
+        }
+
+        .sc-meta {
+            font-size: 12px;
+            color: var(--muted);
+            font-family: 'DM Mono', monospace;
+            margin-bottom: 8px;
+        }
+
+        .sc-stats {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .sc-actions {
+            display: flex;
+            gap: 7px;
+            flex-wrap: wrap;
+        }
+
+        /* GRADE BADGE */
+        .grade-badge {
+            display: inline-block;
+            padding: 2px 9px;
+            border-radius: 2px;
+            font-family: 'DM Mono', monospace;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .grade-Ap {
+            background: #e8f5e9;
+            color: #1a5c2a;
+            border: 1px solid #a5d6a7;
+        }
+
+        .grade-A {
+            background: #e3f2fd;
+            color: #1565c0;
+            border: 1px solid #90caf9;
+        }
+
+        .grade-Bp {
+            background: #f3e5f5;
+            color: #6a1b9a;
+            border: 1px solid #ce93d8;
+        }
+
+        .grade-B {
+            background: #fff8e1;
+            color: #e65100;
+            border: 1px solid #ffcc02;
+        }
+
+        .grade-Cp,
+        .grade-C {
+            background: #fff3e0;
+            color: #bf360c;
+            border: 1px solid #ffab91;
+        }
+
+        .grade-D,
+        .grade-E {
+            background: #ffebee;
+            color: #8b1a1a;
+            border: 1px solid #ef9a9a;
+        }
+
+        /* CHIPS */
+        .filter-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 7px;
+            margin-bottom: 18px;
+        }
+
+        .chip {
+            padding: 5px 13px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            background: var(--card);
+            color: var(--muted);
+            font-size: 12px;
+            cursor: pointer;
+            font-family: 'DM Mono', monospace;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .chip:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+
+        .chip.active {
+            background: var(--gold);
+            color: var(--sidebar-bg);
+            border-color: var(--gold);
+            font-weight: 600;
+        }
+
+        /* TOAST */
+        .toast {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            background: var(--sidebar-bg);
+            color: var(--gold-light);
+            border: 1px solid var(--gold);
+            padding: 11px 18px;
+            border-radius: 6px;
+            font-size: 13px;
+            z-index: 9999;
+            transform: translateY(120px);
+            opacity: 0;
+            transition: all 0.3s;
+            max-width: calc(100vw - 40px);
+            font-family: 'EB Garamond', serif;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.error {
+            border-color: var(--red);
+            color: #e57373;
+        }
+
+        /* MISC */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--muted);
+        }
+
+        .empty-state .icon {
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+
+        .empty-state p {
+            font-size: 15px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 28px;
+            color: var(--muted);
+            font-style: italic;
+        }
+
+        .info-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            font-size: 12px;
+            color: var(--muted);
+            font-family: 'DM Mono', monospace;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        #marksheet-preview {
+            position: absolute;
+            left: -9999px;
+            top: 0;
+            width: 794px;
+        }
+
+        /* BOTTOM NAV */
+        .bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: var(--bottom-nav-h);
+            background: var(--sidebar-bg);
+            border-top: 2px solid var(--gold);
+            z-index: 300;
+            grid-template-columns: repeat(4, 1fr);
+        }
+
+        .bottom-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            cursor: pointer;
+            color: rgba(232, 213, 163, 0.5);
+            transition: all 0.2s;
+            padding: 6px 4px;
+            border-top: 3px solid transparent;
+            user-select: none;
+        }
+
+        .bottom-nav-item.active {
+            color: var(--gold-light);
+            border-top-color: var(--gold);
+        }
+
+        .bn-icon {
+            font-size: 20px;
+            line-height: 1;
+        }
+
+        .bn-label {
+            font-size: 10px;
+            font-family: 'DM Mono', monospace;
+            letter-spacing: 0.04em;
+        }
+
+        /* ─── TABLET: 768–1024 ─── */
+        /* Step Indicator */
+        .step-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 25px;
+            gap: 8px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+
+        .step-dot {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--cream);
+            color: var(--muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'DM Mono', monospace;
+            font-size: 14px;
+            font-weight: 700;
+            position: relative;
+            transition: 0.3s;
+        }
+
+        .step-dot.active {
+            background: var(--gold);
+            color: white;
+            box-shadow: 0 0 0 4px rgba(184, 134, 11, 0.2);
+        }
+
+        .step-dot.done {
+            background: var(--green);
+            color: white;
+        }
+
+        .step-line {
+            flex: 1;
+            height: 3px;
+            background: var(--cream);
+            max-width: 40px;
+            border-radius: 2px;
+        }
+
+        .step-line.active {
+            background: var(--gold);
+        }
+
+        .step-label {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 9px;
+            margin-top: 4px;
+            color: var(--muted);
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .step-dot.active .step-label {
+            color: var(--gold);
+        }
+
+        /* Multi-step Entry Styles */
+        .entry-step {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            justify-content: flex-end;
+        }
+
+        .nav-label {
+            font-family: 'DM Mono', monospace;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media(max-width:1024px) {
+            :root {
+                --sidebar-w: 210px;
+            }
+
+            .stats-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .content {
+                padding: 20px;
+            }
+        }
+
+        /* ─── MOBILE: ≤768 ─── */
+        @media(max-width:768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: 260px;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main {
+                margin-left: 0;
+                padding-bottom: var(--bottom-nav-h);
+            }
+
+            .hamburger {
+                display: flex;
+            }
+
+            .topbar {
+                padding: 0 14px;
+            }
+
+            .topbar h1 {
+                font-size: 15px;
+            }
+
+            .content {
+                padding: 14px 14px 20px;
+            }
+
+            .stats-row {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+                margin-bottom: 16px;
+            }
+
+            .stat-card {
+                padding: 14px 10px;
+            }
+
+            .stat-card .number {
+                font-size: 24px;
+            }
+
+            .stat-card .label {
+                font-size: 9px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .search-bar {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+
+            .search-bar .search-btn-group {
+                grid-column: span 2;
+            }
+
+            /* switch to mobile views */
+            .results-table-wrap {
+                display: none;
+            }
+
+            .student-cards {
+                display: block;
+            }
+
+            /* Hide general tables but KEEP marks entry tables visible */
+            .table-scroll {
+                display: none;
+            }
+
+            .marks-section .table-scroll,
+            #page-add .table-scroll,
+            #marks-search-results .table-scroll {
+                display: block !important;
+            }
+
+            .marks-cards {
+                display: block;
+            }
+
+            .grand-total-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .btn-row {
+                flex-direction: column;
+            }
+
+            .btn-row .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .bottom-nav {
+                display: grid;
+            }
+
+            .session-badge {
+                display: none;
+            }
+
+            .card {
+                padding: 14px;
+            }
+
+            .card-title {
+                font-size: 15px;
+            }
+
+            .toast {
+                bottom: calc(var(--bottom-nav-h) + 12px);
+            }
+        }
+
+        @media(max-width:375px) {
+            .search-bar {
+                grid-template-columns: 1fr;
+            }
+
+            .search-bar .search-btn-group {
+                grid-column: span 1;
+            }
+
+            .marks-card-row {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .btn-loading { position: relative; color: transparent !important; pointer-events: none; }
+        .btn-loading::after {
+            content: ""; position: absolute; width: 16px; height: 16px; top: 0; left: 0; right: 0; bottom: 0;
+            margin: auto; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%;
+            border-top-color: #fff; animation: btn-spin 0.6s linear infinite;
+        }
+        @keyframes btn-spin { to { transform: rotate(360deg); } }
+
+        /* CUSTOM MODAL */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+            display: none; align-items: center; justify-content: center;
+            z-index: 9999; padding: 20px;
+        }
+        .modal-overlay.show { display: flex; animation: modalFadeIn 0.25s ease-out; }
+        .modal-card {
+            background: var(--card); border: 2px solid var(--gold);
+            border-radius: 12px; padding: 24px; width: 100%; max-width: 400px;
+            box-shadow: 0 10px 40px var(--shadow); transform: scale(0.9);
+            transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .modal-overlay.show .modal-card { transform: scale(1); }
+        .modal-title { font-size: 20px; font-weight: 700; color: var(--red); margin-bottom: 12px; }
+        .modal-msg { font-size: 15px; color: var(--ink); margin-bottom: 24px; line-height: 1.5; }
+        .modal-actions { display: flex; gap: 12px; justify-content: flex-end; }
+        
+        @keyframes modalFadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .chip:hover { border-color: var(--gold); }
+        .chip.active { background: var(--gold); color: var(--sidebar-bg); border-color: var(--gold); font-weight: 500; }
+
+        /* AUTH SCREEN */
+        #auth-screen {
+            position: fixed;
+            inset: 0;
+            background: var(--paper);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .auth-card {
+            width: 100%;
+            max-width: 400px;
+            background: var(--card);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        .auth-card h1 {
+            color: var(--gold);
+            font-size: 20px;
+            text-align: center;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .auth-card p {
+            text-align: center;
+            color: var(--muted);
+            font-size: 13px;
+            margin-bottom: 25px;
+        }
+
+        .auth-toggle {
+            display: flex;
+            margin-bottom: 25px;
+            border-bottom: 1px solid var(--cream);
+        }
+
+        .auth-toggle span {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 14px;
+            color: var(--muted);
+        }
+
+        .auth-toggle span.active {
+            color: var(--gold);
+            border-bottom: 2px solid var(--gold);
+            font-weight: 600;
+        }
+
+        .auth-footer {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: var(--muted);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- AUTH SCREEN -->
+    <div id="auth-screen" style="display:none">
+        <div class="auth-card">
+            <h1>Vidya Portal</h1>
+            <p>School Management System</p>
+            <div class="auth-toggle" id="auth-tabs">
+                <span id="tab-login" class="active" onclick="toggleAuth('login')">Login</span>
+                <span id="tab-signup" onclick="toggleAuth('signup')">Sign Up</span>
+            </div>
+            <div id="auth-form-wrap">
+                <!-- Inputs managed via JS for dynamic labels -->
+                <div class="form-group" id="group-name" style="display:none">
+                    <label>Full Name</label>
+                    <input type="text" id="auth-name" placeholder="Ex: Rahul Sharma">
+                </div>
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="auth-email" placeholder="admin@vidya.com">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="auth-password" placeholder="••••••••">
+                </div>
+                <button id="auth-submit-btn" class="btn btn-primary" style="width:100%; margin-top:10px" onclick="submitAuth()">Continue</button>
+            </div>
+            <div class="auth-footer" id="auth-limit-note"></div>
+        </div>
+    </div>
+
+    <!-- MAIN APP WRAPPER -->
+    <div id="app-wrap" style="display:none">
+    <img id="school-logo" src="logo.png" style="display:none">
+
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-logo">
+            <div class="school-emblem">श्री</div>
+            <h2>Shri Hans Vidya Niketan</h2>
+            <p id="user-info">Sonpur, Surajpur (C.G.)</p>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-label">Menu</div>
+            <div class="nav-item active" onclick="showPage('dashboard');closeSidebar()">
+                <span class="icon">📊</span>Dashboard
+            </div>
+            <div class="nav-item" onclick="showPage('add-student');closeSidebar()">
+                <span class="icon">➕</span>Add Student
+            </div>
+            <div class="nav-item" onclick="showPage('add-marks');closeSidebar()">
+                <span class="icon">📝</span>Add Marks
+            </div>
+            <div class="nav-item" onclick="showPage('search');closeSidebar()">
+                <span class="icon">🔍</span>Search & Preview
+            </div>
+            <div class="nav-item" onclick="showPage('classwise');closeSidebar()">
+                <span class="icon">📋</span>Class-wise List
+            </div>
+            <div class="nav-item" onclick="logout()" style="color:var(--red); border-top:1px solid rgba(184,134,11,0.1); margin-top:20px">
+                <span class="icon">🚪</span>Logout
+            </div>
+        </nav>
+    </aside>
+
+    <main class="main">
+        <div class="topbar">
+            <div class="topbar-left">
+                <button class="hamburger" onclick="toggleSidebar()">☰</button>
+                <h1 id="page-title">Dashboard</h1>
+            </div>
+            <span class="session-badge">Session 2025-26</span>
+        </div>
+
+        <div class="content">
+
+            <!-- DASHBOARD -->
+            <div class="page active" id="page-dashboard">
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <div class="number" id="stat-total">—</div>
+                        <div class="label">Total Students</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="number" id="stat-classes">—</div>
+                        <div class="label">Classes</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="number" id="stat-aplus">—</div>
+                        <div class="label">A+ Grade</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="number" id="stat-avg">—</div>
+                        <div class="label">Avg %</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title">📌 Recent Entries</div>
+                    <div id="recent-list">
+                        <div class="loading">Loading...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ADD STUDENT INFO -->
+            <div class="page" id="page-add-student">
+                <div class="card">
+                    <div class="card-title">👤 Student Admission</div>
+
+                    <div class="form-grid">
+                        <div class="form-group"><label>Student Name</label><input type="text" id="s-name" placeholder="Full Name"></div>
+                        <div class="form-group"><label>Father's Name</label><input type="text" id="s-father" placeholder="Father's Name"></div>
+                        <div class="form-group"><label>Mother's Name</label><input type="text" id="s-mother" placeholder="Mother's Name"></div>
+                        <div class="form-group"><label>PEN No.</label><input type="text" id="s-aadhar" placeholder="Permanent Education Number"></div>
+                        <div class="form-group"><label>Date of Birth</label><input type="date" id="s-dob"></div>
+                        <div class="form-group"><label>Admission No.</label><input type="text" id="s-admission"></div>
+                        <div class="form-group"><label>Roll Number</label><input type="text" id="s-roll"></div>
+                        <div class="form-group"><label>Caste</label><input type="text" id="s-caste"></div>
+                        <div class="form-group"><label>Category</label><select id="s-category"><option>GENERAL</option><option>OBC</option><option>SC</option><option>ST</option></select></div>
+                        <div class="form-group"><label>Medium</label><select id="s-medium"><option>HINDI</option><option>ENGLISH</option></select></div>
+                        <div class="form-group"><label>Class</label><select id="s-class"><option value="">Select Class</option><option>Nursery</option><option>KG-I</option><option>KG-II</option><option>1st</option><option>2nd</option><option>3rd</option><option>4th</option><option>5th</option><option>6th</option><option>7th</option><option>8th</option></select></div>
+                        <div class="form-group"><label>Address</label><input type="text" id="s-address"></div>
+                    </div>
+                    <div class="btn-row">
+                        <button class="btn btn-secondary" onclick="clearForm()">🔄 Reset</button>
+                        <button id="save-info-btn" class="btn btn-primary" onclick="saveStudentOnlyInfo()">💾 Save Student Info</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ADD MARKS -->
+            <div class="page" id="page-add-marks">
+                <!-- Search/Select Student for Marks -->
+                <div id="marks-selection-view">
+                    <div class="card">
+                        <div class="card-title">🔍 Select Student to Add Marks</div>
+                        <div class="search-bar">
+                            <div class="form-group"><label>Name</label><input type="text" id="marks-search-name" placeholder="Student name..."></div>
+                            <div class="form-group"><label>Roll No.</label><input type="text" id="marks-search-roll" placeholder="Roll no."></div>
+                            <div class="form-group search-btn-group"><label>&nbsp;</label>                                <button id="marks-search-btn" class="btn btn-primary" onclick="searchStudentsForMarks()" style="width:100%">🔍 Search</button>
+</div>
+                        </div>
+                        <div class="filter-chips" id="marks-class-chips" style="margin-top:15px; border-top:1px solid #eee; padding-top:15px">
+                            <div class="chip active" onclick="filterMarksClass('all',this)">All</div>
+                            <div class="chip" onclick="filterMarksClass('Nursery',this)">Nursery</div>
+                            <div class="chip" onclick="filterMarksClass('KG-I',this)">KG-I</div>
+                            <div class="chip" onclick="filterMarksClass('KG-II',this)">KG-II</div>
+                            <div class="chip" onclick="filterMarksClass('1st',this)">1st</div>
+                            <div class="chip" onclick="filterMarksClass('2nd',this)">2nd</div>
+                            <div class="chip" onclick="filterMarksClass('3rd',this)">3rd</div>
+                            <div class="chip" onclick="filterMarksClass('4th',this)">4th</div>
+                            <div class="chip" onclick="filterMarksClass('5th',this)">5th</div>
+                            <div class="chip" onclick="filterMarksClass('6th',this)">6th</div>
+                            <div class="chip" onclick="filterMarksClass('7th',this)">7th</div>
+                            <div class="chip" onclick="filterMarksClass('8th',this)">8th</div>
+                        </div>
+                        <div id="marks-search-results">
+                            <div class="empty-state"><div class="icon">📝</div><p>Student select karo marks entry ke liye</p></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Marks Entry View -->
+                <div id="marks-entry-view" style="display:none">
+                    <div class="info-row" style="background:var(--cream); padding:10px 15px; border-radius:6px; margin-bottom:15px">
+                        <span style="font-weight:700">Student:</span> <span id="m-target-name">—</span> | 
+                        <span style="font-weight:700">Class:</span> <span id="m-target-class">—</span> | 
+                        <button class="btn btn-secondary btn-sm" onclick="showMarksSelection()">🔙 Back to List</button>
+                    </div>
+
+                    <div class="step-indicator">
+                        <div class="step-dot active" data-step="2">1<span class="step-label">HY</span></div>
+                        <div class="step-line"></div>
+                        <div class="step-dot" data-step="3">2<span class="step-label">Annual</span></div>
+                        <div class="step-line"></div>
+                        <div class="step-dot" data-step="4">3<span class="step-label">Save</span></div>
+                    </div>
+
+                    <!-- STEP 2: Half Yearly -->
+                    <div id="step-2" class="entry-step">
+                        <div class="card">
+                            <div class="card-title">📅 Half Yearly Marks Entry</div>
+                            <input type="hidden" id="hy-total" value="100">
+                            <div class="marks-section"><table class="marks-table" style="min-width:100%"><thead><tr><th>Subject</th><th>Obtained</th><th>%</th><th>Grade</th></tr></thead><tbody id="marks-tbody-hy"></tbody></table></div>
+                        </div>
+                        <div class="btn-row"><button class="btn btn-primary" onclick="setEntryStep(3)">Next: Annual Marks ➡️</button></div>
+                    </div>
+                    <!-- STEP 3: Annual -->
+                    <div id="step-3" class="entry-step" style="display:none">
+                        <div class="card">
+                            <div class="card-title">📅 Annual Marks Entry</div>
+                            <input type="hidden" id="an-total" value="100">
+                            <div class="marks-section"><table class="marks-table" style="min-width:100%"><thead><tr><th>Subject</th><th>Obtained</th><th>%</th><th>Grade</th></tr></thead><tbody id="marks-tbody-an"></tbody></table></div>
+                        </div>
+                        <div class="btn-row"><button class="btn btn-secondary" onclick="setEntryStep(2)">⬅️ Back</button><button class="btn btn-primary" onclick="setEntryStep(4)">Next: Review ➡️</button></div>
+                    </div>
+                    <!-- STEP 4: Review -->
+                    <div id="step-4" class="entry-step" style="display:none">
+                        <div class="card">
+                            <div class="card-title">📊 Final Review</div>
+                            <div class="table-scroll"><table class="marks-table" style="min-width:100%"><thead><tr><th>Subject</th><th>Total Obtained</th><th>Total Max</th><th>%</th><th>Grade</th></tr></thead><tbody id="marks-tbody-summary"></tbody><tfoot id="marks-tfoot" style="background:var(--cream);font-weight:bold"></tfoot></table></div>
+                            <div class="grand-total-box" style="margin-top:20px"><div class="grand-total-grid"><div class="gt-cell"><div class="gt-label">HY</div><div class="gt-val" id="m-gt-hy">—</div></div><div class="gt-cell"><div class="gt-label">Annual</div><div class="gt-val" id="m-gt-an">—</div></div><div class="gt-cell"><div class="gt-label">Total %</div><div class="gt-val" id="m-gt-tot">—</div></div></div><div style="margin-top:10px;text-align:center;font-size:13px">Grade: <span id="m-gt-grade" style="font-weight:700;font-size:16px">—</span></div></div>
+                        </div>
+                        <div class="btn-row"><button class="btn btn-secondary" onclick="setEntryStep(3)">⬅️ Back</button><button id="save-marks-btn" class="btn btn-primary" onclick="saveOnlyMarks()">💾 Save Marksheet</button></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PREVIEW STUDENT -->
+            <div class="page" id="page-preview">
+                <div class="card">
+                    <div class="card-title">👁️ Student Data Preview</div>
+                    <div id="preview-content">
+                        <div class="preview-header">
+                            <h2 id="prev-name">—</h2>
+                            <p id="prev-meta">Class: — | Roll: —</p>
+                        </div>
+                        <div class="preview-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:15px; margin-bottom:25px; padding:15px; background:#f8f9fa; border-radius:8px">
+                            <div><label style="display:block; font-size:12px; color:var(--muted)">Father's Name</label><span id="prev-father" style="font-weight:600">—</span></div>
+                            <div><label style="display:block; font-size:12px; color:var(--muted)">Mother's Name</label><span id="prev-mother" style="font-weight:600">—</span></div>
+                            <div><label style="display:block; font-size:12px; color:var(--muted)">Date of Birth</label><span id="prev-dob" style="font-weight:600">—</span></div>
+                            <div><label style="display:block; font-size:12px; color:var(--muted)">Admission No.</label><span id="prev-adm" style="font-weight:600">—</span></div>
+                            <div><label style="display:block; font-size:12px; color:var(--muted)">PEN Number</label><span id="prev-pen" style="font-weight:600">—</span></div>
+                            <div><label style="display:block; font-size:12px; color:var(--muted)">Medium</label><span id="prev-med" style="font-weight:600">—</span></div>
+                        </div>
+
+                        <div class="marks-table-wrap" style="margin-top:20px">
+                            <div style="font-weight:700; margin-bottom:10px; color:var(--primary)">📊 Academic Performance</div>
+                            <div class="table-scroll">
+                                <table class="results-table" style="width:100%">
+                                    <thead><tr><th>Subject</th><th>HY Obtd</th><th>Annual Obtd</th><th>Total</th><th>Grade</th></tr></thead>
+                                    <tbody id="prev-marks-tbody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="preview-footer-stats" style="margin-top:20px; padding:15px; background:var(--cream); border-radius:8px; display:flex; justify-content:space-around; align-items:center">
+                            <div style="text-align:center"><div style="font-size:12px; color:var(--muted)">Percentage</div><div style="font-size:20px; font-weight:700; color:var(--primary)" id="prev-pct">—</div></div>
+                            <div style="text-align:center"><div style="font-size:12px; color:var(--muted)">Overall Grade</div><div style="font-size:24px; font-weight:800; color:var(--gold)" id="prev-grade">—</div></div>
+                        </div>
+                    </div>
+                    <div class="btn-row" style="margin-top:25px; border-top:1px solid #eee; padding-top:20px">
+                        <button class="btn btn-secondary" onclick="showPage('dashboard')">🔙 Close Preview</button>
+                        <button id="prev-pdf-btn" class="btn btn-primary">⬇ Download Result</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SEARCH -->
+            <div class="page" id="page-search">
+                <div class="card">
+                    <div class="card-title">🔍 Search Student</div>
+                    <div class="search-bar">
+                        <div class="form-group"><label>Name</label><input type="text" id="search-name"
+                                placeholder="Student name..."></div>
+                        <div class="form-group"><label>Roll No.</label><input type="text" id="search-roll"
+                                placeholder="Roll no." inputmode="numeric"></div>
+                        <div class="form-group search-btn-group"><label>&nbsp;</label><button id="main-search-btn" class="btn btn-primary"
+                                onclick="searchStudents()" style="width:100%">🔍 Search Student</button></div>
+                    </div>
+                    <div class="results-table-wrap" id="search-results-table">
+                        <div class="empty-state">
+                            <div class="icon">🔍</div>
+                            <p>Search karo student dhundhne ke liye</p>
+                        </div>
+                    </div>
+                    <div class="student-cards" id="search-results-cards"></div>
+                </div>
+            </div>
+
+            <!-- CLASS-WISE -->
+            <div class="page" id="page-classwise">
+                <div class="card">
+                    <div class="card-title">📋 Class-wise Students</div>
+                    <div class="filter-chips" id="class-chips">
+                        <div class="chip active" onclick="filterClass('all',this)">All</div>
+                        <div class="chip" onclick="filterClass('Nursery',this)">Nursery</div>
+                        <div class="chip" onclick="filterClass('KG-I',this)">KG-I</div>
+                        <div class="chip" onclick="filterClass('KG-II',this)">KG-II</div>
+                        <div class="chip" onclick="filterClass('1st',this)">1st</div>
+                        <div class="chip" onclick="filterClass('2nd',this)">2nd</div>
+                        <div class="chip" onclick="filterClass('3rd',this)">3rd</div>
+                        <div class="chip" onclick="filterClass('4th',this)">4th</div>
+                        <div class="chip" onclick="filterClass('6th',this)">6th</div>
+                        <div class="chip" onclick="filterClass('7th',this)">7th</div>
+                    </div>
+                    <div id="classwise-results">
+                        <div class="loading">Loading...</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- BOTTOM NAV -->
+    <nav class="bottom-nav" id="bottom-nav">
+        <div class="bottom-nav-item active" onclick="showPage('dashboard')" data-page="dashboard"><span
+                class="bn-icon">📊</span><span class="bn-label">Home</span></div>
+        <div class="bottom-nav-item" onclick="showPage('add-student')" data-page="add-student"><span class="bn-icon">➕</span><span
+                class="bn-label">Student</span></div>
+        <div class="bottom-nav-item" onclick="showPage('add-marks')" data-page="add-marks"><span class="bn-icon">📝</span><span
+                class="bn-label">Marks</span></div>
+        <div class="bottom-nav-item" onclick="showPage('search')" data-page="search"><span
+                class="bn-icon">🔍</span><span class="bn-label">Search</span></div>
+        <div class="bottom-nav-item" onclick="showPage('classwise')" data-page="classwise"><span
+                class="bn-icon">📋</span><span class="bn-label">Classes</span></div>
+    </nav>
+
+    <div class="toast" id="toast"></div>
+    <div id="marksheet-preview"></div>
+    </div> <!-- end #app-wrap -->
+
+    <!-- CUSTOM CONFIRM MODAL -->
+    <div class="modal-overlay" id="confirm-modal">
+        <div class="modal-card">
+            <div class="modal-title">⚠️ Confirmation Required</div>
+            <div class="modal-msg" id="confirm-msg">Kya aap is student data ko delete karna chahte hain?</div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" id="confirm-cancel">Nahin, Cancel</button>
+                <button class="btn btn-danger" id="confirm-ok">Haan, Delete Kar Do</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ─── ERROR REPORTING ───
+        window.onerror = (m, u, l) => showToast('Browser Error: ' + m, 'error');
+        window.onunhandledrejection = (e) => showToast('Promise Error: ' + (e.reason ? e.reason.message : 'failed'), 'error');
+
+        // ─── SUPABASE ───
+        const db = supabase.createClient(
+            'https://jbbcpzkymgfuxkfgnbfh.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpiYmNwemt5bWdmdXhrZmduYmZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3Nzk2MDgsImV4cCI6MjA5MTM1NTYwOH0.61m09vQiE6x_9vUSemXqthKIimP-t_5R5zq94mFLje4'
+        );
+
+        let currentMarksClassFilter = 'all';
+        let transientMarksData = null;
+
+        // ─── UTILITIES ───
+        const DB_TIMEOUT = 10000; // 10 seconds timeout
+        
+        async function dbFetch(promise, errorMsg = 'Data fetching failed') {
+            const timeout = new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('Request timed out. Please check your internet or Supabase status.')), DB_TIMEOUT)
+            );
+            try {
+                const res = await Promise.race([promise, timeout]);
+                if (res.error) throw res.error;
+                return res.data;
+            } catch (e) {
+                console.error(errorMsg, e);
+                throw e;
+            }
+        }
+
+        // ─── CONNECTIVITY CHECK ───
+        async function checkConnection() {
+            if (typeof supabase === 'undefined') {
+                showToast('Supabase library failed to load. Check your internet.', 'error');
+                return;
+            }
+            try {
+                await dbFetch(db.from('students').select('id').limit(1), 'Ping failed');
+                console.log('✅ Supabase Connection: Active');
+            } catch (e) {
+                console.error('❌ Supabase Connection Failed:', e);
+                // Don't show toast here as it's checked on load
+            }
+        }
+        checkConnection();
+
+        // ─── CUSTOM CONFIRM ───
+        function showConfirm(msg) {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('confirm-modal');
+                const okBtn = document.getElementById('confirm-ok');
+                const cancelBtn = document.getElementById('confirm-cancel');
+                const msgEl = document.getElementById('confirm-msg');
+                
+                msgEl.textContent = msg;
+                modal.classList.add('show');
+                
+                const cleanup = (val) => {
+                    modal.classList.remove('show');
+                    okBtn.removeEventListener('click', okHandler);
+                    cancelBtn.removeEventListener('click', cancelHandler);
+                    resolve(val);
+                };
+                
+                const okHandler = () => cleanup(true);
+                const cancelHandler = () => cleanup(false);
+                
+                okBtn.addEventListener('click', okHandler);
+                cancelBtn.addEventListener('click', cancelHandler);
+            });
+        }
+
+        let editingId = null;
+        let currentPage = 'dashboard';
+        let currentClassFilter = 'all';
+
+        // ─── UTILS ───
+        function setLoading(btn, isLoading, originalText) {
+            if (isLoading) {
+                btn.classList.add('btn-loading');
+                btn.disabled = true;
+                btn._originalText = btn.innerHTML;
+            } else {
+                btn.classList.remove('btn-loading');
+                btn.disabled = false;
+                if (btn._originalText) btn.innerHTML = btn._originalText;
+            }
+        }
+
+
+
+        // ─── SUBJECTS ───
+        const SUBJECTS = {
+            'Nursery': ['HINDI', 'ENGLISH', 'MATHEMATICS'],
+            'KG-I': ['HINDI', 'ENGLISH', 'MATHEMATICS'],
+            'KG-II': ['HINDI', 'ENGLISH', 'MATHEMATICS'],
+            '1st': ['HINDI', 'ENGLISH', 'MATHEMATICS'],
+            '2nd': ['HINDI', 'ENGLISH', 'MATHEMATICS'],
+            '3rd': ['HINDI', 'ENGLISH', 'MATHEMATICS', 'ENVIRONMENTAL'],
+            '4th': ['HINDI', 'ENGLISH', 'MATHEMATICS', 'ENVIRONMENTAL'],
+            '5th': ['HINDI', 'ENGLISH', 'MATHEMATICS', 'ENVIRONMENTAL'], // Assuming same as 4th
+            '6th': ['HINDI', 'ENGLISH', 'SANSKRIT', 'MATHEMATICS', 'SCIENCE', 'SOCIAL SCIENCE'],
+            '7th': ['HINDI', 'ENGLISH', 'SANSKRIT', 'MATHEMATICS', 'SCIENCE', 'SOCIAL SCIENCE'],
+            '8th': ['HINDI', 'ENGLISH', 'SANSKRIT', 'MATHEMATICS', 'SCIENCE', 'SOCIAL SCIENCE'], // Assuming same as 7th
+        };
+        const PAGE_TITLES = { 
+            dashboard: 'Dashboard', 
+            'add-student': 'Student Admission', 
+            'add-marks': 'Academic Records (Marks)', 
+            search: 'Search & Preview', 
+            classwise: 'Class-wise Students' 
+        };
+
+        // ─── STATUS LOGIC ───
+        function getStudentStatus(s) {
+            const hasBasicInfo = s.name && s.father_name && s.mother_name && (s.roll_number || s.admission_no);
+            const hasMarks = s.marks && Array.isArray(s.marks) && s.marks.length > 0;
+            if (hasBasicInfo && hasMarks) return { icon: '✅', color: 'var(--green)', label: 'Complete' };
+            if (hasBasicInfo) return { icon: '🕒', color: '#ffa000', label: 'Marks Pending' };
+            return { icon: '⚠️', color: 'var(--red)', label: 'Info Missing' };
+        }
+
+        // ─── PAGE NAVIGATION ───
+        function getGrade(p) { p = Number(p); if (p >= 91) return 'A+'; if (p >= 81) return 'A'; if (p >= 71) return 'B+'; if (p >= 61) return 'B'; if (p >= 51) return 'C+'; if (p >= 41) return 'C'; if (p >= 33) return 'D'; return 'E'; }
+        function gClass(g) { return 'grade-' + (g === 'A+' ? 'Ap' : g === 'B+' ? 'Bp' : g === 'C+' ? 'Cp' : g); }
+        function gBadge(g) { return `<span class="grade-badge ${gClass(g)}">${g}</span>`; }
+
+        // ─── NAV ───
+        function showPage(name) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            const pg = document.getElementById('page-' + name);
+            if (pg) pg.classList.add('active');
+            currentPage = name;
+            document.getElementById('page-title').textContent = PAGE_TITLES[name] || 'App';
+            
+            document.querySelectorAll('.nav-item').forEach(n => {
+                n.classList.remove('active');
+                if (n.getAttribute('onclick').includes(`'${name}'`)) n.classList.add('active');
+            });
+            document.querySelectorAll('.bottom-nav-item').forEach(b => {
+                b.classList.remove('active');
+                if (b.dataset.page === name) b.classList.add('active');
+            });
+
+            if (name === 'dashboard') loadDashboard();
+            if (name === 'classwise') { allStudents = []; loadClasswise('all'); }
+            if (name === 'add-student') clearForm();
+            if (name === 'add-marks') showMarksSelection();
+        }
+
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebar-overlay').classList.toggle('show'); }
+        function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebar-overlay').classList.remove('show'); }
+
+
+
+        function computeRow(input) {
+            const sub = input.dataset.sub;
+            const hyT = parseInt(document.getElementById('hy-total').value) || 100;
+            const anT = parseInt(document.getElementById('an-total').value) || 100;
+
+            const hyIn = document.querySelector(`.m-hy[data-sub="${sub}"]`);
+            const anIn = document.querySelector(`.m-an[data-sub="${sub}"]`);
+
+            const hyO = parseFloat(hyIn.value) || 0;
+            const anO = parseFloat(anIn.value) || 0;
+
+            const hyP = Math.round(hyO / hyT * 100);
+            const anP = Math.round(anO / anT * 100);
+            const tO = hyO + anO, tT = hyT + anT, tP = Math.round(tO / tT * 100);
+
+            // Update row UI
+            const hyRow = hyIn.closest('tr');
+            const anRow = anIn.closest('tr');
+            if (hyRow) {
+                const hyPct = hyRow.querySelector('.m-hy-pct');
+                const hyG = hyRow.querySelector('.m-hy-grade');
+                if (hyPct) hyPct.textContent = hyP + '%';
+                if (hyG) hyG.innerHTML = gBadge(getGrade(hyP));
+            }
+            if (anRow) {
+                const anPct = anRow.querySelector('.m-an-pct');
+                const anG = anRow.querySelector('.m-an-grade');
+                if (anPct) anPct.textContent = anP + '%';
+                if (anG) anG.innerHTML = gBadge(getGrade(anP));
+            }
+
+            // Update Summary row
+            const sRow = document.getElementById(`sum-row-${sub.replace(/\s+/g, '-')}`);
+            if (sRow) {
+                const sOb = sRow.querySelector('.sum-ob');
+                const sPct = sRow.querySelector('.sum-pct');
+                const sG = sRow.querySelector('.sum-grade');
+                if (sOb) sOb.textContent = tO;
+                if (sPct) sPct.textContent = tP + '%';
+                if (sG) sG.innerHTML = gBadge(getGrade(tP));
+            }
+
+            computeGrandTotal();
+        }
+
+        function computeGrandTotal() {
+            const hyT = parseInt(document.getElementById('hy-total').value) || 100;
+            const anT = parseInt(document.getElementById('an-total').value) || 100;
+
+            let gHyO = 0, gAnO = 0;
+            const hyIns = document.querySelectorAll('.m-hy');
+            const anIns = document.querySelectorAll('.m-an');
+
+            hyIns.forEach(el => gHyO += parseFloat(el.value) || 0);
+            anIns.forEach(el => gAnO += parseFloat(el.value) || 0);
+
+            const n = hyIns.length;
+            const gHyT = hyT * n, gAnT = anT * n;
+            const gTO = gHyO + gAnO, gTT = gHyT + gAnT;
+            const gTP = gTT > 0 ? Math.round(gTO / gTT * 100) : 0;
+
+            const s = (id, v, html = false) => { const el = document.getElementById(id); if (el) { html ? el.innerHTML = v : el.textContent = v; } };
+
+            s('m-gt-hy', `${gHyO}/${gHyT}`);
+            s('m-gt-an', `${gAnO}/${gAnT}`);
+            s('m-gt-tot', gTP + '%');
+            s('m-gt-grade', getGrade(gTP));
+
+            const ft = document.getElementById('marks-tfoot');
+            if (ft) {
+                ft.innerHTML = `
+                    <tr>
+                        <td style="padding:9px 10px;">GRAND TOTAL</td>
+                        <td>${gTO}</td>
+                        <td>${gTT}</td>
+                        <td>${gTP}%</td>
+                        <td>${gBadge(getGrade(gTP))}</td>
+                    </tr>`;
+            }
+        }
+
+        function collectMarks() {
+            const marks = [];
+            const hyIns = document.querySelectorAll('.m-hy');
+            const hyT = parseInt(document.getElementById('hy-total').value) || 100;
+            const anT = parseInt(document.getElementById('an-total').value) || 100;
+
+            hyIns.forEach(hyIn => {
+                const sub = hyIn.dataset.sub;
+                const anIn = document.querySelector(`.m-an[data-sub="${sub}"]`);
+                const hyO = parseFloat(hyIn.value) || 0;
+                const anO = parseFloat(anIn.value) || 0;
+                marks.push({
+                    subject: sub,
+                    hy_total: hyT,
+                    an_total: anT,
+                    hy_obtained: hyO,
+                    an_obtained: anO
+                });
+            });
+
+            const gHyO = marks.reduce((acc, m) => acc + m.hy_obtained, 0);
+            const gAnO = marks.reduce((acc, m) => acc + m.an_obtained, 0);
+            const gHyT = hyT * marks.length;
+            const gAnT = anT * marks.length;
+            const gTO = gHyO + gAnO, gTT = gHyT + gAnT;
+            const gTP = gTT > 0 ? Math.round(gTO / gTT * 100) : 0;
+
+            return { marks, gTO, gTT, gTP };
+        }
+
+        // ─── SAVE ───
+        // ─── SAVE STUDENT INFO ONLY ───
+        async function saveStudentOnlyInfo() {
+            const name = document.getElementById('s-name').value.trim();
+            const cls = document.getElementById('s-class').value;
+            if (!name || !cls) { showToast('Name aur Class required hai', 'error'); return; }
+            
+            const payload = {
+                name: name.toUpperCase(),
+                father_name: document.getElementById('s-father').value.trim().toUpperCase(),
+                mother_name: document.getElementById('s-mother').value.trim().toUpperCase(),
+                dob: document.getElementById('s-dob').value || null,
+                pen_no: document.getElementById('s-aadhar').value.trim(),
+                caste: document.getElementById('s-caste').value.trim().toUpperCase(),
+                category: document.getElementById('s-category').value,
+                address: document.getElementById('s-address').value.trim().toUpperCase(),
+                class: cls,
+                admission_no: document.getElementById('s-admission').value.trim(),
+                roll_number: document.getElementById('s-roll').value.trim(),
+                medium: document.getElementById('s-medium').value,
+                session: '2025-26'
+            };
+
+            const btn = document.getElementById('save-info-btn');
+            setLoading(btn, true);
+            try {
+                if (editingId) {
+                    await dbFetch(db.from('students').update(payload).eq('id', editingId), 'Update failed');
+                } else {
+                    await dbFetch(db.from('students').insert([payload]), 'Insert failed');
+                }
+                showToast(editingId ? '✅ Student Info updated!' : '✅ Student Admitted!');
+                clearForm();
+                showPage('dashboard');
+            } catch (e) { showToast('Error: ' + e.message, 'error'); }
+            finally { setLoading(btn, false); }
+        }
+
+        // ─── MARKS MODULE LOGIC ───
+        async function showMarksSelection() {
+            document.getElementById('marks-selection-view').style.display = 'block';
+            document.getElementById('marks-entry-view').style.display = 'none';
+            document.getElementById('marks-search-name').value = '';
+            document.getElementById('marks-search-roll').value = '';
+            document.getElementById('marks-search-results').innerHTML = '<div class="loading">Fetching students with pending marks...</div>';
+            await loadPendingMarksStudents();
+        }
+
+        async function loadPendingMarksStudents() {
+            const container = document.getElementById('marks-search-results');
+            try {
+                let query = db.from('students').select('*').order('name');
+                if (currentMarksClassFilter !== 'all') {
+                    query = query.eq('class', currentMarksClassFilter);
+                }
+                const data = await dbFetch(query, 'Pending fetch failed');
+                
+                if (!data || !data.length) {
+                    container.innerHTML = '<div class="empty-state"><div class="icon">📭</div><p>Is class mein koi student nahi mila</p></div>';
+                    return;
+                }
+                
+                container.innerHTML = `
+                    <div class="info-row" style="margin-bottom:10px; color:var(--gold); font-weight:700">
+                        📌 Student List (${data.length} Total)
+                    </div>
+                    <div class="table-scroll">
+                        <table class="results-table">
+                            <thead><tr><th>Name</th><th>Class</th><th>Roll</th><th>Action</th></tr></thead>
+                            <tbody>${data.map(s => {
+                                const status = getStudentStatus(s);
+                                return `<tr>
+                                    <td><strong>${s.name}</strong> <span title="${status.label}">${status.icon}</span></td>
+                                    <td>${s.class}</td>
+                                    <td>${s.roll_number || '—'}</td>
+                                    <td><button class="btn btn-primary btn-sm" onclick="enterMarks('${s.id}')">📝 ${status.label === 'Complete' ? 'Edit' : 'Enter'} Marks</button>
+                                        <button class="btn btn-secondary btn-sm" onclick="previewStudent('${s.id}')">👁️ Preview</button>
+                                    </td>
+                                </tr>`;
+                            }).join('')}</tbody>
+                        </table>
+                    </div>`;
+            } catch (e) {
+                container.innerHTML = `<p style="color:var(--red); padding:20px; text-align:center">Error loading students: ${e.message}</p>`;
+            }
+        }
+
+        async function searchStudentsForMarks() {
+            const name = document.getElementById('marks-search-name').value.trim();
+            const roll = document.getElementById('marks-search-roll').value.trim();
+            if(!name && !roll) { showToast('Type something to search', 'error'); return; }
+            
+            const btn = document.getElementById('marks-search-btn');
+            setLoading(btn, true);
+            
+            let query = db.from('students').select('*').order('name');
+            if (currentMarksClassFilter !== 'all') {
+                query = query.eq('class', currentMarksClassFilter);
+            }
+            if (name && roll) {
+                query = query.ilike('name', `%${name}%`).ilike('roll_number', `%${roll}%`);
+            } else if (name) {
+                query = query.ilike('name', `%${name}%`);
+            } else if (roll) {
+                query = query.ilike('roll_number', `%${roll}%`);
+            }
+            
+            try {
+                const data = await dbFetch(query, 'Search fetch failed');
+                const container = document.getElementById('marks-search-results');
+                if (!data || !data.length) {
+                    showToast('Student nahi mila', 'info');
+                    container.innerHTML = '<div class="empty-state"><div class="icon">😕</div><p>No student found</p></div>';
+                    return;
+                }
+                showToast(`Found ${data.length} student(s)`);
+                container.innerHTML = `
+                    <div class="table-scroll">
+                        <table class="results-table">
+                            <thead><tr><th>Name</th><th>Class</th><th>Roll</th><th>Action</th></tr></thead>
+                            <tbody>${data.map(s => `<tr>
+                                <td><strong>${s.name}</strong></td><td>${s.class}</td><td>${s.roll_number || '—'}</td>
+                                <td><button class="btn btn-primary btn-sm" onclick="enterMarks('${s.id}')">📝 Enter Marks</button></td>
+                            </tr>`).join('')}</tbody>
+                        </table>
+                    </div>`;
+            } catch (e) { showToast('Search Error: ' + e.message, 'error'); }
+            finally { setLoading(btn, false); }
+        }
+
+        function filterMarksClass(cls, el) {
+            currentMarksClassFilter = cls;
+            document.querySelectorAll('#marks-class-chips .chip').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+            loadPendingMarksStudents();
+        }
+
+        async function enterMarks(id) {
+            showPage('add-marks');
+            editingId = id;
+            try {
+                const data = await dbFetch(db.from('students').select('*').eq('id', id).single(), 'Fetch student failed');
+                
+                document.getElementById('m-target-name').textContent = data.name;
+                document.getElementById('m-target-class').textContent = data.class;
+                
+                // Set hidden inputs for totals (default 100)
+                document.getElementById('hy-total').value = 100;
+                document.getElementById('an-total').value = 100;
+                
+                // Prepare form fields (even if hidden in this page) for collectMarks
+                document.getElementById('s-class').value = data.class;
+                
+                document.getElementById('marks-selection-view').style.display = 'none';
+                document.getElementById('marks-entry-view').style.display = 'block';
+                
+                transientMarksData = data.marks; // Store for setEntryStep
+                setEntryStep(2); // This will call renderMarksSection(transientMarksData)
+            } catch (e) { showToast('Error loading student: ' + e.message, 'error'); }
+        }
+
+        async function saveOnlyMarks() {
+            if (!editingId) return;
+            const btn = document.getElementById('save-marks-btn');
+            setLoading(btn, true);
+            const { marks, gTO, gTT, gTP } = collectMarks();
+            const payload = {
+                marks, grand_total_obtained: gTO, grand_total_marks: gTT, 
+                percentage: gTP, grade: getGrade(gTP)
+            };
+            try {
+                await dbFetch(db.from('students').update(payload).eq('id', editingId), 'Save marks failed');
+                showToast('✅ Marks saved successfully!');
+                showPage('dashboard');
+            } catch (e) { showToast('Save Error: ' + e.message, 'error'); }
+            finally { setLoading(btn, false); }
+        }
+
+        // ─── ORIGINAL SAVE (KEEP FOR EDITING FROM SEARCH) ───
+        async function saveStudent() {
+            const btn = document.getElementById('save-info-btn');
+            const name = document.getElementById('s-name').value.trim();
+            const cls = document.getElementById('s-class').value;
+            if (!name || !cls) { showToast('Name aur Class required hai', 'error'); return; }
+            setLoading(btn, true);
+            const { marks, gTO, gTT, gTP } = collectMarks();
+            const payload = {
+                name: name.toUpperCase(),
+                father_name: document.getElementById('s-father').value.trim().toUpperCase(),
+                mother_name: document.getElementById('s-mother').value.trim().toUpperCase(),
+                dob: document.getElementById('s-dob').value || null,
+                pen_no: document.getElementById('s-aadhar').value.trim(),
+                caste: document.getElementById('s-caste').value.trim().toUpperCase(),
+                category: document.getElementById('s-category').value,
+                address: document.getElementById('s-address').value.trim().toUpperCase(),
+                class: cls, admission_no: document.getElementById('s-admission').value.trim(),
+                roll_number: document.getElementById('s-roll').value.trim(),
+                medium: document.getElementById('s-medium').value,
+                marks, grand_total_obtained: gTO, grand_total_marks: gTT, percentage: gTP,
+                grade: getGrade(gTP), session: '2025-26'
+            };
+            try {
+                if (editingId) {
+                    await dbFetch(db.from('students').update(payload).eq('id', editingId), 'Update failed');
+                } else {
+                    await dbFetch(db.from('students').insert([payload]), 'Insert failed');
+                }
+                showToast(editingId ? '✅ Marksheet updated!' : '✅ Marksheet saved!');
+                clearForm();
+                showPage('dashboard');
+            } catch (e) { showToast('Error: ' + e.message, 'error'); }
+            finally { setLoading(btn, false); }
+        }
+
+        function clearForm() {
+            ['s-name', 's-father', 's-mother', 's-aadhar', 's-caste', 's-address', 's-admission', 's-roll'].forEach(id => {
+                const el = document.getElementById(id); if(el) el.value = '';
+            });
+            const dob = document.getElementById('s-dob'); if(dob) dob.value = '';
+            const cls = document.getElementById('s-class'); if(cls) cls.value = '';
+            const cat = document.getElementById('s-category'); if(cat) cat.value = 'GENERAL';
+            const med = document.getElementById('s-medium'); if(med) med.value = 'HINDI';
+            
+            editingId = null;
+        }
+
+        async function deleteStudent(id) {
+            if (!id) return;
+            const confirmed = await showConfirm('Kya aap sach mein is student data ko delete karna chahte hain?');
+            if (!confirmed) return;
+            try {
+                await dbFetch(db.from('students').delete().eq('id', id), 'Delete failed');
+                                showToast('🗑️ Marksheet delete ho gayi!');
+                
+                // CRITICAL: Always clear global cache after deletion
+                allStudents = []; 
+
+                if (currentPage === 'dashboard') loadDashboard();
+                else if (currentPage === 'search') searchStudents(true);
+                else if (currentPage === 'classwise') loadClasswise(currentClassFilter);
+                
+                if (editingId === id) clearForm();
+            } catch (e) { showToast('Error: ' + e.message, 'error'); }
+        }
+
+        // ─── STUDENT CARD (mobile) ───
+        function sCard(s) {
+            const status = getStudentStatus(s);
+            return `<div class="student-card">
+    <div class="sc-header">
+        <div class="sc-name">${s.name} <span title="${status.label}" style="cursor:help;font-size:14px">${status.icon}</span></div>
+        ${gBadge(s.grade)}
+    </div>
+    <div class="sc-meta">${s.class} | Roll: ${s.roll_number || '—'} | ${s.father_name || ''}</div>
+    <div class="sc-stats">
+      <span style="font-family:'DM Mono',monospace;font-size:13px;font-weight:700;color:var(--gold)">${s.percentage}%</span>
+      <span style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace">${s.grand_total_obtained}/${s.grand_total_marks}</span>
+    </div>
+    <div class="sc-actions">
+      <button class="btn btn-info btn-sm" title="Preview" onclick="previewStudent('${s.id}')">👁️ Preview</button>
+      <button class="btn btn-success btn-sm" onclick="downloadPDF('${s.id}')">⬇ PDF</button>
+      <button class="btn btn-primary btn-sm" onclick="enterMarks('${s.id}')">📝 Marks</button>
+      <button class="btn btn-secondary btn-sm" onclick="editStudent('${s.id}')">✏ Info</button>
+      <button class="btn btn-danger btn-sm" title="Delete Student" onclick="deleteStudent('${s.id}')">🗑</button>
+    </div>
+  </div>`;
+        }
+
+        // ─── DASHBOARD ───
+        async function loadDashboard() {
+            try {
+                console.log('Loading dashboard data...');
+                const data = await dbFetch(
+                    db.from('students').select('*').order('created_at', { ascending: false }),
+                    'Dashboard fetch failed'
+                );
+
+                console.log('Data fetched successfully:', data.length, 'students');
+                
+                document.getElementById('stat-total').textContent = data.length;
+                document.getElementById('stat-classes').textContent = [...new Set(data.map(d => d.class))].length;
+                document.getElementById('stat-aplus').textContent = data.filter(d => d.grade === 'A+').length;
+                const avg = data.length ? Math.round(data.reduce((s, d) => s + (d.percentage || 0), 0) / data.length) : 0;
+                document.getElementById('stat-avg').textContent = avg + '%';
+
+                const recent = data.slice(0, 10);
+                if (!recent.length) {
+                    document.getElementById('recent-list').innerHTML = '<div class="empty-state"><div class="icon">📭</div><p>Koi student abhi tak add nahi hua</p></div>';
+                    return;
+                }
+                document.getElementById('recent-list').innerHTML = `
+      <div class="results-table-wrap">
+        <div class="table-scroll">
+          <table class="results-table" style="min-width:480px">
+            <thead><tr><th>Name</th><th>Class</th><th>Roll</th><th>%</th><th>Grade</th><th>Action</th></tr></thead>
+            <tbody>${recent.map(s => {
+                const status = getStudentStatus(s);
+                return `<tr>
+              <td><strong>${s.name}</strong> <span title="${status.label}" style="cursor:help">${status.icon}</span></td><td>${s.class}</td><td>${s.roll_number || '—'}</td>
+              <td>${s.percentage}%</td><td>${gBadge(s.grade)}</td>
+              <td><div class="action-btns">
+                <button class="btn btn-info btn-sm" title="Preview" onclick="previewStudent('${s.id}')">👁️</button>
+                <button class="btn btn-success btn-sm" onclick="downloadPDF('${s.id}')">⬇ PDF</button>
+                <button class="btn btn-primary btn-sm" title="Add/Edit Marks" onclick="enterMarks('${s.id}')">📝</button>
+                <button class="btn btn-secondary btn-sm" title="Edit Info" onclick="editStudent('${s.id}')">✏</button>
+                <button class="btn btn-danger btn-sm" title="Delete Student" onclick="deleteStudent('${s.id}')">🗑</button>
+              </div></td></tr>`;
+            }).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="student-cards">${recent.map(s => sCard(s)).join('')}</div>`;
+            } catch (e) {
+                console.error('Dashboard Load Error:', e);
+                document.getElementById('stat-total').textContent = 'Err';
+                document.getElementById('stat-classes').textContent = 'Err';
+                document.getElementById('recent-list').innerHTML = `
+                    <div class="empty-state">
+                        <p style="color:var(--red); font-weight:bold">Loading Error!</p>
+                        <p style="margin-top:8px; font-size:14px">${e.message || 'Unknown connection error'}</p>
+                        <p style="margin-top:12px; font-size:12px; color:var(--muted)">
+                            1. Check if Supabase project is "Paused".<br>
+                            2. Check internet connection.<br>
+                            3. Run SQL schema if the table is missing.
+                        </p>
+                        <button class="btn btn-sm btn-primary" style="margin-top:15px" onclick="loadDashboard()">🔄 Try Again</button>
+                    </div>`;
+            }
+        }
+
+        // ─── SEARCH ───
+
+
+        // ─── SEARCH ───
+        async function searchStudents(force = false) {
+            const nameValue = document.getElementById('search-name').value.trim();
+            const rollValue = document.getElementById('search-roll').value.trim();
+            if (!force && !nameValue && !rollValue) { showToast('Please enter search criteria', 'error'); return; }
+
+            const btn = document.getElementById('main-search-btn');
+            setLoading(btn, true);
+
+            let q = db.from('students').select('*').order('name');
+            if (nameValue && rollValue) {
+                q = q.ilike('name', `%${nameValue}%`).ilike('roll_number', `%${rollValue}%`);
+            } else if (nameValue) {
+                q = q.ilike('name', `%${nameValue}%`);
+            } else if (rollValue) {
+                q = q.ilike('roll_number', `%${rollValue}%`);
+            }
+            try {
+                const data = await dbFetch(q, 'Search failed');
+                const tableWrap = document.getElementById('search-results-table');
+                const cardsWrap = document.getElementById('search-results-cards');
+                if (!data || !data.length) {
+                    showToast('Student nahi mila', 'info');
+                    tableWrap.innerHTML = '<div class="empty-state"><div class="icon">😕</div><p>Koi student nahi mila</p></div>';
+                    cardsWrap.innerHTML = ''; return;
+                }
+                showToast(`Found ${data.length} student(s)`);
+                tableWrap.innerHTML = `
+      <div class="info-row">📌 ${data.length} student(s) found</div>
+      <div class="table-scroll">
+        <table class="results-table" style="min-width:540px">
+          <thead><tr><th>Name</th><th>Father</th><th>Class</th><th>Roll</th><th>%</th><th>Grade</th><th>Action</th></tr></thead>
+          <tbody>${data.map(s => {
+              const status = getStudentStatus(s);
+              return `<tr>
+            <td><strong>${s.name}</strong> <span title="${status.label}" style="cursor:help">${status.icon}</span></td><td>${s.father_name || '—'}</td>
+            <td>${s.class}</td><td>${s.roll_number || '—'}</td>
+            <td>${s.percentage}%</td><td>${gBadge(s.grade)}</td>
+            <td><div class="action-btns">
+              <button class="btn btn-info btn-sm" title="Preview Data" onclick="previewStudent('${s.id}')">👁️</button>
+              <button class="btn btn-success btn-sm" onclick="downloadPDF('${s.id}')">⬇ PDF</button>
+              <button class="btn btn-primary btn-sm" onclick="enterMarks('${s.id}')">📝 Marks</button>
+              <button class="btn btn-secondary btn-sm" onclick="editStudent('${s.id}')">✏ Info</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteStudent('${s.id}')">🗑</button>
+            </div></td></tr>`;
+          }).join('')}
+          </tbody>
+        </table>
+      </div>`;
+                cardsWrap.innerHTML = `<div class="info-row">📌 ${data.length} found</div>` + data.map(s => sCard(s)).join('');
+            } catch (e) {
+                console.error('Search Error:', e);
+                showToast('Search Failed: ' + e.message, 'error');
+                const tableWrap = document.getElementById('search-results-table');
+                tableWrap.innerHTML = `<p style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</p>`;
+            } finally { setLoading(btn, false); }
+        }
+        let allStudents = [];
+        function setEntryStep(step) {
+            if (step > 1 && currentPage !== 'add-marks') {
+                const name = document.getElementById('s-name').value.trim();
+                const cls = document.getElementById('s-class').value;
+                if (!name || !cls) {
+                    showToast('⚠️ Student Name aur Class bharna zaroori hai!');
+                    return;
+                }
+            }
+            document.querySelectorAll('.entry-step').forEach(el => el.style.display = 'none');
+            const target = document.getElementById(`step-${step}`);
+            if (target) target.style.display = 'block';
+            else return; // If step doesn't exist on this page, stop here
+
+            // Update Progress Indicator
+            document.querySelectorAll('.step-dot').forEach(dot => {
+                const dStep = parseInt(dot.dataset.step);
+                dot.classList.remove('active', 'done');
+                if (dStep === step) dot.classList.add('active');
+                else if (dStep < step) dot.classList.add('done');
+            });
+            document.querySelectorAll('.step-line').forEach((line, i) => {
+                line.classList.toggle('active', i < step - 1);
+            });
+
+            if (step >= 2) {
+                renderMarksSection(transientMarksData || collectMarks().marks);
+                transientMarksData = null; // Use once, then fallback to UI state
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function renderMarksSection(providedMarks = null) {
+            const cls = document.getElementById('s-class').value;
+            if (!cls) return;
+            let autoTot = 100;
+            const lowerClasses = ['Nursery', 'KG-I', 'KG-II', '1st', '2nd', '3rd', '4th', '5th'];
+            if (lowerClasses.includes(cls)) autoTot = 50;
+            document.getElementById('hy-total').value = autoTot;
+            document.getElementById('an-total').value = autoTot;
+            // Max labels removed in modular view
+            const hyMax = parseInt(document.getElementById('hy-total').value) || 100;
+            const anMax = parseInt(document.getElementById('an-total').value) || 100;
+            const activeSubs = SUBJECTS[cls] || ['HINDI', 'ENGLISH', 'MATHEMATICS'];
+            const hyTbody = document.getElementById('marks-tbody-hy');
+            const anTbody = document.getElementById('marks-tbody-an');
+            const sumTbody = document.getElementById('marks-tbody-summary');
+            
+            // Use provided marks (from DB) or current UI marks
+            const oldMarks = providedMarks || collectMarks().marks || [];
+            hyTbody.innerHTML = '';
+            anTbody.innerHTML = '';
+            sumTbody.innerHTML = '';
+            activeSubs.forEach(sub => {
+                const prev = oldMarks.find(m => m.subject === sub) || { hy_obtained: 0, an_obtained: 0 };
+                const hyRow = document.createElement('tr');
+                hyRow.innerHTML = `
+                    <td class="sub-name">${sub}</td>
+                    <td><input type="number" class="m-hy" data-sub="${sub}" value="${prev.hy_obtained}" min="0" max="${hyMax}" oninput="computeRow(this)"></td>
+                    <td class="m-hy-pct">—</td>
+                    <td class="m-hy-grade">—</td>
+                `;
+                hyTbody.appendChild(hyRow);
+                const anRow = document.createElement('tr');
+                anRow.innerHTML = `
+                    <td class="sub-name">${sub}</td>
+                    <td><input type="number" class="m-an" data-sub="${sub}" value="${prev.an_obtained}" min="0" max="${anMax}" oninput="computeRow(this)"></td>
+                    <td class="m-an-pct">—</td>
+                    <td class="m-an-grade">—</td>
+                `;
+                anTbody.appendChild(anRow);
+                const sumRow = document.createElement('tr');
+                sumRow.id = `sum-row-${sub.replace(/\s+/g, '-')}`;
+                sumRow.innerHTML = `
+                    <td class="sub-name">${sub}</td>
+                    <td class="sum-ob">0</td>
+                    <td class="sum-max">${hyMax + anMax}</td>
+                    <td class="sum-pct">—</td>
+                    <td class="sum-grade">—</td>
+                `;
+                sumTbody.appendChild(sumRow);
+            });
+            document.querySelectorAll('.m-hy, .m-an').forEach(el => computeRow(el));
+        }
+
+        async function loadClasswise(cls) {
+            if (!allStudents.length) {
+                try {
+                    console.log('Fetching all students for class-wise view...');
+                    const data = await dbFetch(
+                        db.from('students').select('*').order('class').order('name'),
+                        'Classwise fetch failed'
+                    );
+                    allStudents = data || [];
+                    console.log('Class-wise data loaded:', allStudents.length, 'students');
+                } catch (e) {
+                    console.error('LoadClasswise Error:', e);
+                    document.getElementById('classwise-results').innerHTML = `
+                        <div class="empty-state">
+                            <p style="color:var(--red); font-weight:bold">Load Error!</p>
+                            <p>${e.message}</p>
+                            <button class="btn btn-sm btn-primary" onclick="loadClasswise('all')">🔄 Retry</button>
+                        </div>`;
+                    return;
+                }
+            }
+            renderClasswise(cls);
+        }
+        function filterClass(cls, el) {
+            currentClassFilter = cls;
+            document.querySelectorAll('.chip').forEach(c => c.classList.remove('active')); el.classList.add('active'); renderClasswise(cls);
+        }
+        function renderClasswise(cls) {
+            const filtered = cls === 'all' ? allStudents : allStudents.filter(s => s.class === cls);
+            if (!filtered.length) { document.getElementById('classwise-results').innerHTML = '<div class="empty-state"><div class="icon">📭</div><p>Is class mein koi student nahi</p></div>'; return; }
+            const grouped = {};
+            filtered.forEach(s => { if (!grouped[s.class]) grouped[s.class] = []; grouped[s.class].push(s); });
+            let html = '';
+            Object.keys(grouped).forEach(c => {
+                const students = grouped[c];
+                const avg = Math.round(students.reduce((s, d) => s + (d.percentage || 0), 0) / students.length);
+                html += `<div style="margin-bottom:24px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
+        <div style="font-weight:700;font-size:15px">Class ${c}</div>
+        <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)">${students.length} students • avg ${avg}%</div>
+        <button class="btn btn-secondary btn-sm" onclick="downloadClassPDF('${c}')">⬇ All PDF</button>
+      </div>
+      <div class="table-scroll">
+        <table class="results-table" style="min-width:460px">
+          <thead><tr><th>#</th><th>Name</th><th>Roll</th><th>Obtained</th><th>%</th><th>Grade</th><th>Action</th></tr></thead>
+          <tbody>${students.map((s, i) => {
+              const status = getStudentStatus(s);
+              return `<tr>
+            <td style="color:var(--muted);font-family:'DM Mono',monospace">${i + 1}</td>
+            <td><strong>${s.name}</strong> <span title="${status.label}" style="cursor:help">${status.icon}</span><br><small style="color:var(--muted)">${s.father_name || ''}</small></td>
+            <td>${s.roll_number || '—'}</td><td>${s.grand_total_obtained}/${s.grand_total_marks}</td>
+            <td><strong>${s.percentage}%</strong></td><td>${gBadge(s.grade)}</td>
+            <td><div class="action-btns">
+              <button class="btn btn-info btn-sm" title="Preview Data" onclick="previewStudent('${s.id}')">👁️</button>
+              <button class="btn btn-success btn-sm" onclick="downloadPDF('${s.id}')">⬇ PDF</button>
+              <button class="btn btn-primary btn-sm" onclick="enterMarks('${s.id}')">📝 Marks</button>
+              <button class="btn btn-secondary btn-sm" onclick="editStudent('${s.id}')">✏ Info</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteStudent('${s.id}')">🗑</button>
+            </div></td></tr>`;
+          }).join('')}
+          </tbody>
+        </table>
+      </div>
+      <div class="student-cards" style="display:block;margin-top:10px">${students.map(s => sCard(s)).join('')}</div>
+    </div>`;
+            });
+            document.getElementById('classwise-results').innerHTML = html;
+        }
+
+        async function editStudent(id) {
+            try {
+                const s = await dbFetch(db.from('students').select('*').eq('id', id).single(), 'Edit fetch failed');
+                editingId = id;
+                transientMarksData = s.marks; // Load marks for Step 2
+                showPage('add-student');
+                // Removed delete btn style jump and entry step fix for split module
+                ['s-name', 's-father', 's-mother', 's-aadhar', 's-caste', 's-address', 's-admission', 's-roll'].forEach(f => {
+                    const key = {
+                        's-name': 'name', 's-father': 'father_name', 's-mother': 'mother_name',
+                        's-aadhar': 'pen_no', 's-caste': 'caste', 's-address': 'address',
+                        's-admission': 'admission_no', 's-roll': 'roll_number'
+                    }[f];
+                    document.getElementById(f).value = s[key] || '';
+                });
+                document.getElementById('s-dob').value = s.dob || '';
+                document.getElementById('s-category').value = s.category || 'GENERAL';
+                document.getElementById('s-class').value = s.class || '';
+                document.getElementById('s-medium').value = s.medium || 'HINDI';
+
+                renderMarksSection();
+                setTimeout(() => {
+                    const m = s.marks || [];
+                    if (m[0]) {
+                        document.getElementById('hy-total').value = m[0].hy_total;
+                        document.getElementById('an-total').value = m[0].an_total;
+                    }
+                    m.forEach((mk) => {
+                        const sub = mk.subject.toUpperCase(); // Ensure uppercase for matching
+                        document.querySelectorAll(`.m-hy[data-sub="${sub}"]`).forEach(el => {
+                            el.value = mk.hy_obtained;
+                            computeRow(el);
+                        });
+                        document.querySelectorAll(`.m-an[data-sub="${sub}"]`).forEach(el => {
+                            el.value = mk.an_obtained;
+                            computeRow(el);
+                        });
+                    });
+                }, 200);
+                showToast('✏ Student data loaded');
+            } catch (e) { showToast('Error: ' + e.message, 'error'); }
+        }
+
+        async function previewStudent(id) {
+            try {
+                const s = await dbFetch(db.from('students').select('*').eq('id', id).single(), 'Preview fetch failed');
+                
+                document.getElementById('prev-name').textContent = s.name;
+                document.getElementById('prev-meta').textContent = `Class: ${s.class} | Roll: ${s.roll_number || '—'}`;
+                document.getElementById('prev-father').textContent = s.father_name || '—';
+                document.getElementById('prev-mother').textContent = s.mother_name || '—';
+                document.getElementById('prev-dob').textContent = s.dob || '—';
+                document.getElementById('prev-adm').textContent = s.admission_number || '—';
+                document.getElementById('prev-pen').textContent = s.aadhar_number || '—';
+                document.getElementById('prev-med').textContent = s.medium || '—';
+                
+                const marks = s.marks || [];
+                const tbody = document.getElementById('prev-marks-tbody');
+                tbody.innerHTML = '';
+                
+                marks.forEach(m => {
+                    const totalObtd = (parseFloat(m.hy_obtained) || 0) + (parseFloat(m.an_obtained) || 0);
+                    const totalMax = (parseFloat(m.hy_total) || 100) + (parseFloat(m.an_total) || 100);
+                    const pct = totalMax > 0 ? ((totalObtd / totalMax) * 100).toFixed(1) : '0.0';
+                    
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td style="font-weight:600">${m.subject}</td>
+                        <td>${m.hy_obtained}</td>
+                        <td>${m.an_obtained}</td>
+                        <td>${totalObtd} / ${totalMax}</td>
+                        <td>${gBadge(getGrade(pct))}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+
+                document.getElementById('prev-pct').textContent = (s.percentage || 0) + '%';
+                document.getElementById('prev-grade').innerHTML = gBadge(s.grade || '—');
+                
+                document.getElementById('prev-pdf-btn').onclick = () => downloadPDF(id);
+                
+                showPage('preview');
+            } catch (e) { showToast('Preview Error: ' + e.message, 'error'); }
+        }
+
+        // ─── PDF ───
+        async function downloadPDF(id) {
+            try { 
+                const s = await dbFetch(db.from('students').select('*').eq('id', id).single(), 'PDF fetch failed'); 
+                await genPDF(s); 
+            }
+            catch (e) { showToast('Error: ' + e.message, 'error'); }
+        }
+
+        async function genPDF(s) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+            await drawMarksheet(doc, s);
+            doc.save(`Marksheet_${s.name.replace(/\s+/g, '_')}_${s.class}.pdf`);
+            showToast('📄 PDF download ho rahi hai!');
+        }
+
+        async function downloadClassPDF(cls) {
+            try {
+                const data = await dbFetch(db.from('students').select('*').eq('class', cls).order('roll_number'), 'Class PDF fetch failed');
+                if (!data.length) { showToast('Koi student nahi mila', 'error'); return; }
+
+                showToast(`⏳ ${data.length} students ki combined PDF generate ho rahi hai...`);
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+                for (let i = 0; i < data.length; i++) {
+                    if (i > 0) doc.addPage();
+                    await drawMarksheet(doc, data[i]);
+                    // yield control to UI
+                    if (i % 5 === 0) await new Promise(r => setTimeout(r, 100));
+                }
+
+                doc.save(`Class_${cls}_All_Marksheets.pdf`);
+                showToast(`✅ ${data.length} marksheets combined PDF mein download ho gayi!`);
+            } catch (e) { showToast('Error: ' + e.message, 'error'); }
+        }
+
+        async function drawMarksheet(doc, s) {
+            const W = 210, H = 297, mg = 12, cW = W - mg * 2;
+
+            // Gradient Background Inside Border
+            const canvas = document.createElement('canvas');
+            canvas.width = 500; canvas.height = 10;
+            const ctx = canvas.getContext('2d');
+            const grad = ctx.createLinearGradient(0, 0, 500, 0);
+            grad.addColorStop(0, '#E1E1E6');
+            grad.addColorStop(0.5, '#FFFFFF');
+            grad.addColorStop(1, '#E1E1E6');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, 500, 10);
+            doc.addImage(canvas.toDataURL('image/png'), 'PNG', 8, 8, W - 16, H - 16);
+
+            // Repeating Background Text Watermark (Roll No to Bottom - Straight Red)
+            doc.setFontSize(6.5);
+            doc.setTextColor(255, 0, 0);
+            doc.setGState(new doc.GState({ opacity: 0.05 }));
+            const singleWM = "SHRI HANS VIDYA NIKETAN SCHOOL ";
+            const fullLine = singleWM.repeat(10); 
+            // Dense vertical spacing (reduced from 6mm to 4mm)
+            for (let yPos = 70; yPos < 290; yPos += 4) {
+                doc.text(fullLine, 0, yPos, { angle: 0 });
+            }
+            // Mask margins to white
+            doc.setGState(new doc.GState({ opacity: 1 }));
+            doc.setFillColor(255, 255, 255);
+            doc.rect(0, 0, 8, H, 'F'); // Left Mask
+            doc.rect(W - 8, 0, 8, H, 'F'); // Right Mask
+            doc.rect(0, 0, W, 8, 'F'); // Top Mask
+            doc.rect(0, H - 8, W, 8, 'F'); // Bottom Mask
+
+            // Subtle Watermark (Center Logo)
+            const logoImg = document.getElementById('school-logo');
+            if (logoImg && logoImg.complete && logoImg.naturalWidth !== 0) {
+                doc.setGState(new doc.GState({ opacity: 0.12 }));
+                doc.addImage(logoImg, 'PNG', W / 2 - 55, H / 2 - 55, 110, 110);
+                doc.setGState(new doc.GState({ opacity: 1 }));
+            }
+
+            // Borders
+            doc.setDrawColor(0); doc.setLineWidth(1.2); doc.rect(8, 8, W - 16, H - 16);
+            doc.setLineWidth(0.3); doc.rect(9.5, 9.5, W - 19, H - 19);
+
+            // Background vertical lines in header
+            doc.setDrawColor(242); doc.setLineWidth(0.05);
+            for (let lx = mg; lx <= W - mg; lx += 0.8) {
+                doc.line(lx, 10.5, lx, 53);
+            }
+
+            // Header Section
+            // Top Right Info
+            doc.setFontSize(8.5); doc.setFont('helvetica', 'bold'); doc.setTextColor(0);
+            doc.text('U.Dise Code - 22271702304', W - mg - 5, 14, { align: 'right' });
+
+            // Logo Section
+            if (logoImg && logoImg.complete && logoImg.naturalWidth !== 0) {
+                doc.addImage(logoImg, 'PNG', mg, 15, 25, 25);
+            } else {
+                doc.setDrawColor(180); doc.setLineWidth(0.2);
+                doc.rect(mg, 15, 25, 25);
+                doc.setFontSize(6); doc.text('LOGO', mg + 12.5, 28, { align: 'center' });
+            }
+
+            // School Name (Blue)
+            doc.setFontSize(19); doc.setFont('helvetica', 'bold'); doc.setTextColor(0, 86, 179);
+            doc.text('SHRI HANS VIDYA NIKETAN SCHOOL SONPUR', W / 2 + 10, 22, { align: 'center' });
+
+            doc.setFontSize(10); doc.setFont('helvetica', 'bold'); doc.setTextColor(0);
+            doc.text('Managed by Shri Hans Vidya Seva Kalyan Samiti', W / 2 + 10, 28, { align: 'center' });
+            doc.setFontSize(8.5); doc.setFont('helvetica', 'normal'); doc.setTextColor(60);
+            doc.text('(Sonpur, Pratappur, District - Surajpur(C.G.) Pine Code – 497223)', W / 2 + 10, 33, { align: 'center' });
+
+            doc.setFontSize(13); doc.setFont('helvetica', 'bold'); doc.setTextColor(0);
+            doc.text('MARSHEET', W / 2, 41, { align: 'center' });
+            doc.setFontSize(11); doc.setFont('helvetica', 'bold');
+            doc.text(`Session – ${s.session || '2025-26'}`, W / 2, 47, { align: 'center' });
+            
+            // Separator line below Session
+            const boxPadding = 18; // approx 70px (30px + 40px)
+            const bX = mg + boxPadding;
+            const bW_box = (cW - boxPadding * 2) / 4;
+            
+            doc.setDrawColor(0); doc.setLineWidth(0.4);
+            doc.line(bX, 50, W - bX, 50);
+
+            // Top Box (Class, Admission, Medium, Roll)
+            let y = 53;
+            
+            doc.setDrawColor(0); doc.setLineWidth(0.4);
+            doc.rect(bX, y, cW - boxPadding * 2, 14);
+            [bW_box, bW_box * 2, bW_box * 3].forEach(x => doc.line(bX + x, y, bX + x, y + 14));
+            doc.line(bX, y + 7, bX + (cW - boxPadding * 2), y + 7);
+
+            doc.setFontSize(8.5); doc.setFont('helvetica', 'normal'); doc.setTextColor(0);
+            ['CLASS', 'ADMISSION NO.', 'MEDIUM', 'ROLL NUMBER'].forEach((h, i) => {
+                doc.text(h, bX + (i * bW_box) + bW_box / 2, y + 5, { align: 'center' });
+            });
+            doc.setFontSize(11); doc.setFont('helvetica', 'bold');
+            [s.class, s.admission_no || '—', s.medium || 'HINDI', s.roll_number || '—'].forEach((v, i) => {
+                doc.text(String(v), bX + (i * bW_box) + bW_box / 2, y + 12, { align: 'center' });
+            });
+
+            // Student Info List
+            y = 75;
+            doc.setFontSize(10); doc.setFont('helvetica', 'normal');
+            const info = [
+                [`Student's Name :  ${s.name.toUpperCase()}`, ''],
+                [`Father's Name :  Mr. ${(s.father_name || '').toUpperCase()}`, ''],
+                [`Mother's Name :  Mrs. ${(s.mother_name || '').toUpperCase()}`, ''],
+            ];
+            info.forEach(row => {
+                doc.text(row[0], mg + 2, y); y += 6;
+            });
+
+            const dobStr = s.dob ? fmtDate(s.dob) : '—';
+            const dobW = s.dob ? dateWords(s.dob) : '—';
+
+            doc.text(`Caste : ${s.caste || '—'}`, mg + 2, y);
+            doc.text(`Category : ${s.category || '—'}`, mg + 65, y); y += 6;
+
+            doc.text(`Date of Birth : ${dobStr}`, mg + 2, y);
+            doc.text(`(In words) : ${dobW}`, mg + 65, y); y += 6;
+
+            doc.text(`PEN No. : ${s.pen_no || '—'}`, mg + 2, y);
+            doc.text(`Address : ${s.address || '—'}`, mg + 65, y); y += 9;
+
+            doc.setFontSize(9); doc.setFont('helvetica', 'bold');
+            doc.text('SUBJECT WISE MARKS OBTAIND BY HIM/HER ARE AS UNDER :-', mg + 2, y); y += 4;
+
+            // Marks Table
+            const mk = s.marks || [];
+            let gHyO = 0, gAnO = 0, gHyT = 0, gAnT = 0;
+            mk.forEach(m => { gHyO += m.hy_obtained; gAnO += m.an_obtained; gHyT += m.hy_total; gAnT += m.an_total; });
+            const gTO = gHyO + gAnO, gTT = gHyT + gAnT;
+            const gHyP = Math.round(gHyO / gHyT * 100), gAnP = Math.round(gAnO / gAnT * 100), gTP = Math.round(gTO / gTT * 100);
+
+            const tbody = mk.map(m => {
+                const hP = Math.round(m.hy_obtained / m.hy_total * 100);
+                const aP = Math.round(m.an_obtained / m.an_total * 100);
+                const tO = m.hy_obtained + m.an_obtained, tT = m.hy_total + m.an_total, tP = Math.round(tO / tT * 100);
+                return [m.subject, m.hy_total, m.hy_obtained, hP + '%', getGrade(hP), m.an_total, m.an_obtained, aP + '%', getGrade(aP), tT, tO, tP + '%', getGrade(tP)];
+            });
+            tbody.push([{ content: 'GRAND TOTAL', styles: { fontStyle: 'bold' } }, gHyT, gHyO, gHyP + '%', getGrade(gHyP), gAnT, gAnO, gAnP + '%', getGrade(gAnP), gTT, gTO, gTP + '%', getGrade(gTP)]);
+
+            doc.autoTable({
+                startY: y,
+                head: [
+                    [
+                        { content: 'SUBJECTS', rowSpan: 2, styles: { halign: 'left', valign: 'middle', fontStyle: 'bold' } },
+                        { content: 'HALF YEARLY ASSESSMENT', colSpan: 4, styles: { halign: 'center' } },
+                        { content: 'ANNUAL ASSESSMENT', colSpan: 4, styles: { halign: 'center' } },
+                        { content: 'TOTAL', colSpan: 4, styles: { halign: 'center' } },
+                    ],
+                    ['TOTAL MARKS', 'MARKS OBTAIND', 'PERCENTAGE', 'GRADE', 'TOTAL MARKS', 'MARKS OBTAIND', 'PERCENTAGE', 'GRADE', 'TERM-1 + TERM-2', 'MARKS OBTAIND', 'PERCENTAGE', 'GRADE']
+                ],
+                body: tbody,
+                margin: { left: mg, right: mg },
+                theme: 'grid',
+                styles: { fontSize: 7.5, cellPadding: 1.5, halign: 'center', valign: 'middle', textColor: 0, lineColor: 0, lineWidth: 0.1 },
+                headStyles: { fillColor: [240, 240, 240], textColor: 0, fontStyle: 'bold', fontSize: 6.5 },
+                columnStyles: { 0: { halign: 'left', fontStyle: 'bold', cellWidth: 28 } },
+                didDrawCell: d => {
+                    if (d.section === 'body' && d.row.index === tbody.length - 1) {
+                        doc.setLineWidth(0.3); doc.line(d.cell.x, d.cell.y, d.cell.x + d.cell.width, d.cell.y);
+                    }
+                }
+            });
+
+            y = doc.lastAutoTable.finalY + 6;
+            const cH = 40, cW2 = cW * 0.65;
+            doc.setDrawColor(0); doc.setLineWidth(0.3);
+            doc.rect(mg, y, cW2, cH);
+            doc.setFontSize(9); doc.setFont('helvetica', 'bold');
+            doc.text('CERTIFIED THAT', mg + cW2 / 2, y + 6, { align: 'center' });
+            doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5);
+            doc.text(`CLASS : ${s.class}   ACADEMIC SESSION ${s.session || '2025-26'}`, mg + 3, y + 13);
+            doc.text(`IN THE HALF-YEARLY ASSESSMENT : ${getGrade(gHyP)} GRADE ( ${gHyP}% )`, mg + 3, y + 19);
+            doc.text(`IN THE ANNUAL ASSESSMENT : ${getGrade(gAnP)} GRADE ( ${gAnP}% )`, mg + 3, y + 25);
+            doc.setFont('helvetica', 'bold'); doc.text("Student's Special Achievements:", mg + 3, y + 31);
+            doc.setLineWidth(0.2); doc.line(mg + 5, y + 36, mg + cW2 - 5, y + 36);
+
+            // Grade Reference Table (Remarks)
+            const rmX = mg + cW2 + 5, rmW = cW - cW2 - 5;
+            doc.autoTable({
+                startY: y,
+                head: [[{ content: 'Remarks / Grade', colSpan: 2, styles: { halign: 'center', fillColor: [240, 240, 240], textColor: 0, fontStyle: 'bold' } }]],
+                body: [
+                    ['91% and above', 'A+'], ['81% to 90%', 'A'], ['71% to 80%', 'B+'], ['61% to 70%', 'B'],
+                    ['51% to 60%', 'C+'], ['41% to 50%', 'C'], ['33% to 40%', 'D'], ['Below 33%', 'E']
+                ],
+                margin: { left: rmX },
+                tableWidth: rmW,
+                theme: 'grid',
+                styles: { fontSize: 6.5, cellPadding: 1.2, halign: 'left', textColor: 0, lineColor: 0, lineWidth: 0.1 },
+                columnStyles: { 1: { halign: 'center', fontStyle: 'bold' } }
+            });
+
+            // Footer - Fixed Position at bottom
+            const footY = H - 32;
+            // QR Code
+            const qrText = `School: Shri Hans Vidya Niketan School Sonpur\nStudent: ${s.name}\nFather: ${s.father_name || '—'}\nClass: ${s.class}\nRoll: ${s.roll_number || '—'}\nPercent: ${s.percentage}%`;
+            try {
+                const qrUrl = await QRCode.toDataURL(qrText, { margin: 1, width: 100 });
+                doc.addImage(qrUrl, 'PNG', mg, footY, 18, 18);
+            } catch (e) {
+                doc.rect(mg, footY, 18, 18);
+                doc.setFontSize(5); doc.text('QR ERROR', mg + 9, footY + 10, { align: 'center' });
+            }
+
+            doc.setFontSize(9); doc.setFont('helvetica', 'bold');
+            const sigs = [
+                [W / 2, 'Signature of\nClass Teacher'],
+                [W - mg - 25, 'Seal & Signature of\nPrincipal']
+            ];
+            sigs.forEach(([x, lbl]) => {
+                lbl.split('\n').forEach((ln, li) => doc.text(ln, x, footY + 10 + li * 5, { align: 'center' }));
+            });
+        }
+
+        // ─── HELPERS ───
+        function fmtDate(d) { if (!d) return '—'; const dt = new Date(d); return `${String(dt.getDate()).padStart(2, '0')}-${String(dt.getMonth() + 1).padStart(2, '0')}-${dt.getFullYear()}`; }
+        function dateWords(d) {
+            if (!d) return '—';
+            const dt = new Date(d);
+            const D = ['', 'First', 'Second', 'Third', 'Fourth', 'Fifth', 'Sixth', 'Seventh', 'Eighth', 'Ninth', 'Tenth', 'Eleventh', 'Twelfth', 'Thirteenth', 'Fourteenth', 'Fifteenth', 'Sixteenth', 'Seventeenth', 'Eighteenth', 'Nineteenth', 'Twentieth', 'Twenty First', 'Twenty Second', 'Twenty Third', 'Twenty Fourth', 'Twenty Fifth', 'Twenty Sixth', 'Twenty Seventh', 'Twenty Eighth', 'Twenty Ninth', 'Thirtieth', 'Thirty First'];
+            const M = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+            const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+            const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+            const n2w = n => (n < 20 ? ones[n] : tens[Math.floor(n / 10)] + (n % 10 ? ' ' + ones[n % 10] : ''));
+            const y = dt.getFullYear();
+            let yW = (y >= 2000 && y < 2100) ? 'Two Thousand' + (y === 2000 ? '' : ' ' + n2w(y % 100)) :
+                (y >= 1900 && y < 2000) ? 'Nineteen ' + n2w(y % 100) : y.toString();
+            return `${D[dt.getDate()]} ${M[dt.getMonth()]} ${yW}`;
+        }
+        function showToast(msg, type = 'success') {
+            const t = document.getElementById('toast'); t.textContent = msg;
+            t.className = 'toast show' + (type === 'error' ? ' error' : '');
+            clearTimeout(t._t); t._t = setTimeout(() => t.className = 'toast', 3200);
+        }
+
+        // Listen for Enter key on search inputs
+        const bindEnter = (id, fn) => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('keypress', e => { if (e.key === 'Enter') fn(); });
+        };
+        bindEnter('search-name', searchStudents);
+        bindEnter('search-roll', searchStudents);
+        bindEnter('marks-search-name', searchStudentsForMarks);
+        bindEnter('marks-search-roll', searchStudentsForMarks);
+
+        // ─── AUTH LOGIC ───
+        let currentUser = null;
+        let authMode = 'login';
+
+        async function initAuth() {
+            const { data: { session } } = await db.auth.getSession();
+            handleAuthStateChange(session);
+
+            db.auth.onAuthStateChange((_event, session) => {
+                handleAuthStateChange(session);
+            });
+        }
+
+        async function handleAuthStateChange(session) {
+            const authScreen = document.getElementById('auth-screen');
+            const appWrap = document.getElementById('app-wrap');
+
+            if (session) {
+                try {
+                    // Give the database trigger a split second to create the profile
+                    let { data: profile } = await db.from('profiles').select('*').eq('id', session.user.id).single();
+                    
+                    if (!profile) {
+                        await new Promise(r => setTimeout(r, 1000));
+                        const retry = await db.from('profiles').select('*').eq('id', session.user.id).single();
+                        profile = retry.data;
+                    }
+
+                    if (!profile) throw new Error('Profile not found');
+
+                    currentUser = profile;
+                    authScreen.style.display = 'none';
+                    appWrap.style.display = 'flex';
+                    // Update User Info in Sidebar
+                    document.getElementById('user-info').textContent = `${currentUser.full_name} (${currentUser.role})`;
+                    loadDashboard();
+                } catch (e) {
+                    console.error('Auth Profile Error:', e);
+                    db.auth.signOut();
+                }
+            } else {
+                currentUser = null;
+                appWrap.style.display = 'none';
+                authScreen.style.display = 'flex';
+                updateAuthStatus();
+            }
+        }
+
+        async function toggleAuth(mode) {
+            authMode = mode;
+            document.getElementById('tab-login').classList.toggle('active', mode === 'login');
+            document.getElementById('tab-signup').classList.toggle('active', mode === 'signup');
+            document.getElementById('group-name').style.display = mode === 'signup' ? 'block' : 'none';
+            document.getElementById('auth-submit-btn').textContent = mode === 'login' ? '🔑 Sign In' : '📝 Create Account';
+        }
+
+        async function updateAuthStatus() {
+            try {
+                const { count, error } = await db.from('profiles').select('*', { count: 'exact', head: true });
+                if (error) {
+                    if (error.code === '42P01') {
+                        document.getElementById('auth-limit-note').innerHTML = '<span style="color:var(--red)">⚠️ Error: Profiles table not found.<br>Please run the provided SQL script first.</span>';
+                    } else {
+                        document.getElementById('auth-limit-note').textContent = 'Error checking status: ' + error.message;
+                    }
+                    return;
+                }
+                
+                if (count >= 6) {
+                    document.getElementById('tab-signup').style.display = 'none';
+                    document.getElementById('auth-limit-note').innerHTML = '⚠️ Registration is currently closed.<br>Please contact system admin.';
+                    toggleAuth('login');
+                } else {
+                    document.getElementById('tab-signup').style.display = 'block';
+                    document.getElementById('auth-limit-note').textContent = `${6 - count} invites remaining`;
+                }
+            } catch (e) {
+                console.error('Auth Status Error:', e);
+                document.getElementById('auth-limit-note').textContent = 'Check console for errors';
+            }
+        }
+
+        async function submitAuth() {
+            const email = document.getElementById('auth-email').value.trim();
+            const password = document.getElementById('auth-password').value;
+            const btn = document.getElementById('auth-submit-btn');
+
+            if (!email || !password) return showToast('Email & Password are required');
+            setLoading(btn, true);
+
+            try {
+                if (authMode === 'login') {
+                    const { error } = await db.auth.signInWithPassword({ email, password });
+                    if (error) throw error;
+                } else {
+                    const name = document.getElementById('auth-name').value.trim();
+                    if (!name) throw new Error('Full Name is required');
+
+                    // 1. Sign up with metadata (trigger will handle profile creation)
+                    const { data: { user }, error: sError } = await db.auth.signUp({ 
+                        email, 
+                        password,
+                        options: { data: { full_name: name } }
+                    });
+                    
+                    if (sError) {
+                        if (sError.status === 429) {
+                            throw new Error('Too many attempts! Please wait 10-15 minutes or increase "Signup Rate Limit" in Supabase Auth Settings.');
+                        }
+                        throw sError;
+                    }
+                    
+                    if (user && user.identities && user.identities.length === 0) {
+                        throw new Error('This email is already registered. Try logging in.');
+                    }
+
+                    showToast('Welcome! Account created successfully.');
+                }
+            } catch (e) {
+                console.error('Auth Error:', e);
+                showToast(e.message || 'Authentication failed', 'error');
+            } finally {
+                setLoading(btn, false);
+            }
+        }
+
+        async function logout() {
+            await db.auth.signOut();
+            showToast('Logged out successfully');
+        }
+
+        initAuth();
+    </script>
+</body>
+
+</html>
+
+<!--
+SUPABASE SQL SCHEMA:
+Run this in your Supabase SQL Editor to create the 'students' table.
+
+CREATE TABLE IF NOT EXISTS students (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    name TEXT NOT NULL,
+    father_name TEXT,
+    mother_name TEXT,
+    dob DATE,
+    pen_no TEXT,
+    caste TEXT,
+    category TEXT,
+    address TEXT,
+    class TEXT NOT NULL,
+    admission_no TEXT,
+    roll_number TEXT,
+    medium TEXT,
+    photo TEXT, -- Stores Base64 image string
+    marks JSONB DEFAULT '[]'::jsonb,
+    grand_total_obtained INTEGER,
+    grand_total_marks INTEGER,
+    percentage INTEGER,
+    grade TEXT,
+    session TEXT DEFAULT '2025-26',
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE students ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public Access" ON students FOR ALL USING (true) WITH CHECK (true);
+-->
