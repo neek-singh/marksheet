@@ -1742,10 +1742,16 @@
 
         // ─── STATUS LOGIC ───
         function getStudentStatus(s) {
-            const hasBasicInfo = s.name && s.father_name && s.mother_name && (s.roll_number || s.admission_no);
-            const hasMarks = s.marks && Array.isArray(s.marks) && s.marks.length > 0;
-            if (hasBasicInfo && hasMarks) return { icon: '✅', color: 'var(--green)', label: 'Complete' };
-            if (hasBasicInfo) return { icon: '🕒', color: '#ffa000', label: 'Marks Pending' };
+            // Strict info check: Ensure ALL core fields are filled
+            const requiredInfo = ['name', 'father_name', 'mother_name', 'dob', 'class', 'admission_no', 'roll_number', 'medium', 'address', 'caste'];
+            const hasFullInfo = requiredInfo.every(field => s[field] && String(s[field]).trim() !== '');
+            
+            // Strict marks check: Ensure ALL subjects for that class were entered
+            const expectedSubs = SUBJECTS[s.class] || [];
+            const hasAllMarks = s.marks && Array.isArray(s.marks) && s.marks.length >= expectedSubs.length && expectedSubs.length > 0;
+
+            if (hasFullInfo && hasAllMarks) return { icon: '✅', color: 'var(--green)', label: 'Complete' };
+            if (hasFullInfo) return { icon: '🕒', color: '#ffa000', label: 'Marks Pending' };
             return { icon: '⚠️', color: 'var(--red)', label: 'Info Missing' };
         }
 
