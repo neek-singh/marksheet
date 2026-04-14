@@ -10,7 +10,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
     <link
-        href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=DM+Mono:wght@400;500&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:ital,wght@0,400;0,500&display=swap"
         rel="stylesheet">
     <style>
         :root {
@@ -31,6 +31,8 @@
             --sidebar-w: 240px;
             --topbar-h: 56px;
             --bottom-nav-h: 64px;
+            --font-main: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --font-mono: 'JetBrains Mono', 'DM Mono', monospace;
         }
 
         * {
@@ -47,7 +49,7 @@
         }
 
         body {
-            font-family: 'EB Garamond', Georgia, serif;
+            font-family: var(--font-main);
             background: var(--paper);
             color: var(--ink);
             min-height: 100vh;
@@ -103,7 +105,7 @@
             color: rgba(232, 213, 163, 0.45);
             font-size: 9px;
             margin-top: 3px;
-            font-family: 'DM Mono', monospace;
+            font-family: var(--font-mono);
         }
 
         .sidebar-nav {
@@ -117,7 +119,7 @@
             letter-spacing: 0.12em;
             text-transform: uppercase;
             padding: 8px 18px 4px;
-            font-family: 'DM Mono', monospace;
+            font-family: var(--font-mono);
         }
 
         .nav-item {
@@ -219,7 +221,7 @@
             font-size: 11px;
             padding: 3px 10px;
             border-radius: 2px;
-            font-family: 'DM Mono', monospace;
+            font-family: var(--font-mono);
             white-space: nowrap;
             flex-shrink: 0;
         }
@@ -282,7 +284,7 @@
             font-size: 28px;
             font-weight: 700;
             color: var(--gold);
-            font-family: 'DM Mono', monospace;
+            font-family: var(--font-mono);
             line-height: 1;
         }
 
@@ -292,7 +294,7 @@
             margin-top: 5px;
             text-transform: uppercase;
             letter-spacing: 0.08em;
-            font-family: 'DM Mono', monospace;
+            font-family: var(--font-mono);
         }
 
         /* FORM */
@@ -313,7 +315,7 @@
             color: var(--muted);
             letter-spacing: 0.07em;
             text-transform: uppercase;
-            font-family: 'DM Mono', monospace;
+            font-family: var(--font-mono);
         }
 
         input,
@@ -322,7 +324,7 @@
             border: 1px solid var(--border);
             border-radius: 4px;
             padding: 9px 12px;
-            font-family: 'EB Garamond', serif;
+            font-family: var(--font-main);
             font-size: 15px;
             color: var(--ink);
             outline: none;
@@ -380,7 +382,7 @@
             font-size: 10px;
             letter-spacing: 0.06em;
             text-transform: uppercase;
-            font-family: 'DM Mono', monospace;
+            font-family: var(--font-mono);
             font-weight: 500;
             white-space: nowrap;
         }
@@ -408,7 +410,7 @@
         }
 
         .computed-cell {
-            font-family: 'DM Mono', monospace;
+            font-family: var(--font-mono);
             font-size: 12px;
             color: var(--muted);
             font-weight: 500;
@@ -455,7 +457,7 @@
             color: var(--muted);
             text-transform: uppercase;
             letter-spacing: 0.07em;
-            font-family: 'DM Mono', monospace;
+            font-family: var(--font-mono);
             margin-bottom: 6px;
         }
 
@@ -466,7 +468,7 @@
         }
 
         .marks-card-computed {
-            font-family: 'DM Mono', monospace;
+            font-family: var(--font-mono);
             font-size: 11px;
             color: var(--muted);
             margin-top: 4px;
@@ -497,7 +499,7 @@
             font-weight: 700;
             font-size: 14px;
             margin-bottom: 10px;
-            font-family: 'DM Mono', monospace;
+            font-family: var(--font-mono);
             color: var(--ink);
         }
 
@@ -514,7 +516,7 @@
         .gt-label {
             font-size: 10px;
             color: var(--muted);
-            font-family: 'DM Mono', monospace;
+            font-family: var(--font-mono);
             text-transform: uppercase;
         }
 
@@ -522,7 +524,7 @@
             font-size: 18px;
             font-weight: 700;
             color: var(--gold);
-            font-family: 'DM Mono', monospace;
+            font-family: var(--font-mono);
         }
 
         /* BUTTONS */
@@ -534,7 +536,7 @@
             border: none;
             border-radius: 4px;
             cursor: pointer;
-            font-family: 'EB Garamond', serif;
+            font-family: var(--font-main);
             font-size: 14px;
             font-weight: 600;
             transition: all 0.2s;
@@ -620,7 +622,7 @@
             text-transform: uppercase;
             padding: 9px 12px;
             text-align: left;
-            font-family: 'DM Mono', monospace;
+            font-family: var(--font-mono);
             font-weight: 500;
             border-bottom: 2px solid var(--border);
             white-space: nowrap;
@@ -665,7 +667,7 @@
         .sc-meta {
             font-size: 12px;
             color: var(--muted);
-            font-family: 'DM Mono', monospace;
+            font-family: var(--font-mono);
             margin-bottom: 8px;
         }
 
@@ -688,7 +690,7 @@
             display: inline-block;
             padding: 2px 9px;
             border-radius: 2px;
-            font-family: 'DM Mono', monospace;
+            font-family: var(--font-mono);
             font-size: 11px;
             font-weight: 500;
         }
@@ -747,7 +749,7 @@
             color: var(--muted);
             font-size: 12px;
             cursor: pointer;
-            font-family: 'DM Mono', monospace;
+            font-family: var(--font-mono);
             transition: all 0.2s;
             user-select: none;
         }
@@ -780,7 +782,7 @@
             opacity: 0;
             transition: all 0.3s;
             max-width: calc(100vw - 40px);
-            font-family: 'EB Garamond', serif;
+            font-family: var(--font-main);
         }
 
         .toast.show {
@@ -822,7 +824,7 @@
             align-items: center;
             font-size: 12px;
             color: var(--muted);
-            font-family: 'DM Mono', monospace;
+            font-family: var(--font-mono);
             margin-bottom: 12px;
             flex-wrap: wrap;
         }
@@ -880,7 +882,7 @@
 
         .bn-label {
             font-size: 10px;
-            font-family: 'DM Mono', monospace;
+            font-family: var(--font-mono);
             letter-spacing: 0.04em;
         }
 
@@ -908,7 +910,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-family: 'DM Mono', monospace;
+            font-family: var(--font-mono);
             font-size: 14px;
             font-weight: 700;
             position: relative;
@@ -971,7 +973,7 @@
         }
 
         .nav-label {
-            font-family: 'DM Mono', monospace;
+            font-family: var(--font-mono);
             font-size: 13px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
