@@ -270,12 +270,24 @@
             gap: 10px;
         }
 
-        /* STATS */
+        /* STATS Grid */
         .stats-row {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            grid-template-columns: repeat(4, 1fr);
             gap: 20px;
             margin-bottom: 24px;
+        }
+
+        @media (max-width: 1200px) {
+            .stats-row { grid-template-columns: repeat(3, 1fr); }
+        }
+
+        @media (max-width: 900px) {
+            .stats-row { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+        }
+
+        @media (max-width: 480px) {
+            .stats-row { grid-template-columns: repeat(2, 1fr); gap: 10px; }
         }
 
         .stat-card {
@@ -322,15 +334,19 @@
             font-weight: 600;
         }
 
-        /* FORM */
+        /* FORM Grid */
         .form-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            grid-template-columns: repeat(3, 1fr);
             gap: 20px;
         }
 
-        @media (min-width: 1200px) {
-            .form-grid { grid-template-columns: repeat(3, 1fr); }
+        @media (max-width: 1200px) {
+            .form-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 768px) {
+            .form-grid { grid-template-columns: 1fr; gap: 14px; }
         }
 
         .form-group {
@@ -636,11 +652,19 @@
 
         /* SEARCH BAR */
         .search-bar {
-            display: grid;
-            grid-template-columns: 1fr 1fr auto;
+            display: flex;
             gap: 12px;
             margin-bottom: 20px;
             align-items: flex-end;
+            flex-wrap: wrap;
+        }
+        .search-bar .form-group { flex: 1; min-width: 180px; }
+        .search-bar .search-btn-group { flex: 0; }
+
+        @media (max-width: 600px) {
+            .search-bar { flex-direction: column; align-items: stretch; gap: 14px; }
+            .search-bar .form-group { min-width: 100%; }
+            .search-bar .btn { width: 100%; justify-content: center; }
         }
 
         /* RESULTS TABLE */
@@ -678,6 +702,28 @@
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
             margin-bottom: 10px;
+            border-radius: 8px;
+            position: relative;
+        }
+        
+        /* Mobile scroll hint indicator */
+        .table-scroll::after {
+            content: '↔ Scroll Karein';
+            position: sticky;
+            left: 0;
+            bottom: 0;
+            background: var(--gold);
+            color: white;
+            padding: 2px 8px;
+            font-size: 9px;
+            border-top-right-radius: 4px;
+            font-family: var(--font-mono);
+            display: none;
+            z-index: 10;
+        }
+        
+        @media (max-width: 768px) {
+            .table-scroll::after { display: inline-block; }
         }
 
         /* MOBILE STUDENT CARDS */
@@ -722,9 +768,22 @@
         }
 
         .sc-actions {
-            display: flex;
-            gap: 7px;
-            flex-wrap: wrap;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 12px;
+            border-top: 1px solid var(--border);
+            padding-top: 12px;
+        }
+        
+        @media (max-width: 360px) {
+            .sc-actions { grid-template-columns: 1fr; }
+        }
+
+        .sc-actions .btn {
+            width: 100%;
+            padding: 8px;
+            font-size: 12px;
         }
 
         /* GRADE BADGE */
@@ -960,17 +1019,38 @@
             font-weight: 700;
             position: relative;
             transition: 0.3s;
+            border: 2px solid var(--border);
+            z-index: 2;
         }
 
         .step-dot.active {
             background: var(--gold);
-            color: white;
+            color: var(--sidebar-bg);
+            border-color: var(--gold);
             box-shadow: 0 0 0 4px rgba(184, 134, 11, 0.2);
         }
 
         .step-dot.done {
             background: var(--green);
             color: white;
+            border-color: var(--green);
+        }
+
+        .step-label {
+            position: absolute;
+            top: 40px;
+            font-size: 10px;
+            font-weight: 600;
+            white-space: nowrap;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        @media (max-width: 480px) {
+            .step-indicator { gap: 10px; padding: 10px; margin-bottom: 30px; }
+            .step-dot { width: 28px; height: 28px; font-size: 12px; }
+            .step-label { font-size: 8px; top: 32px; }
         }
 
         .step-line {
@@ -1051,9 +1131,6 @@
             .topbar { padding: 0 16px; }
             .topbar h1 { font-size: 16px; }
             .content { padding: 16px 16px 24px; }
-            .stats-row { gap: 12px; }
-            .stat-card { padding: 18px 12px; }
-            .stat-card .number { font-size: 26px; }
 
             /* Switch to cards view */
             .results-table-wrap { display: none; }
@@ -1074,7 +1151,7 @@
             .btn-row .btn { width: 100%; }
             .bottom-nav { display: grid; }
             .session-badge { display: none; }
-            .card { padding: 20px 16px; }
+            .card { padding: 20px 16px; margin-bottom: 20px; }
             .toast { bottom: calc(var(--bottom-nav-h) + 12px); }
             .preview-grid { grid-template-columns: 1fr !important; gap: 10px !important; }
         }
@@ -1878,22 +1955,25 @@
                     <div class="info-row" style="margin-bottom:10px; color:var(--gold); font-weight:700">
                         📌 Student List (${data.length} Total)
                     </div>
-                    <div class="table-scroll">
-                        <table class="results-table">
-                            <thead><tr><th>Name</th><th>Class</th><th>Roll</th><th>Action</th></tr></thead>
-                            <tbody>${data.map(s => {
-                                const status = getStudentStatus(s);
-                                return `<tr>
-                                    <td><strong>${s.name}</strong> <span title="${status.label}">${status.icon}</span></td>
-                                    <td>${s.class}</td>
-                                    <td>${s.roll_number || '—'}</td>
-                                    <td><button class="btn btn-primary btn-sm" onclick="enterMarks('${s.id}')">📝 ${status.label === 'Complete' ? 'Edit' : 'Enter'} Marks</button>
-                                        <button class="btn btn-secondary btn-sm" onclick="previewStudent('${s.id}')">👁️ Preview</button>
-                                    </td>
-                                </tr>`;
-                            }).join('')}</tbody>
-                        </table>
-                    </div>`;
+                    <div class="results-table-wrap">
+                        <div class="table-scroll">
+                            <table class="results-table">
+                                <thead><tr><th>Name</th><th>Class</th><th>Roll</th><th>Action</th></tr></thead>
+                                <tbody>${data.map(s => {
+                                    const status = getStudentStatus(s);
+                                    return `<tr>
+                                        <td><strong>${s.name}</strong> <span title="${status.label}">${status.icon}</span></td>
+                                        <td>${s.class}</td>
+                                        <td>${s.roll_number || '—'}</td>
+                                        <td><button class="btn btn-primary btn-sm" onclick="enterMarks('${s.id}')">📝 ${status.label === 'Complete' ? 'Edit' : 'Enter'} Marks</button>
+                                            <button class="btn btn-secondary btn-sm" onclick="previewStudent('${s.id}')">👁️ Preview</button>
+                                        </td>
+                                    </tr>`;
+                                }).join('')}</tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="student-cards">${data.map(s => sCard(s)).join('')}</div>`;
             } catch (e) {
                 container.innerHTML = `<p style="color:var(--red); padding:20px; text-align:center">Error loading students: ${e.message}</p>`;
             }
@@ -2129,13 +2209,13 @@
                 let summaryHtml = `
                     <div class="results-table-wrap" style="display:block">
                         <div class="table-scroll" style="display:block">
-                            <table class="results-table" style="min-width:480px">
+                            <table class="results-table">
                                 <thead>
                                     <tr>
                                         <th>Class</th>
                                         <th>Total</th>
-                                        <th>Complete ✅</th>
-                                        <th>Pending 🕒</th>
+                                        <th>Cmp ✅</th>
+                                        <th>Pnd 🕒</th>
                                         <th>Status</th>
                                     </tr>
                                 </thead>
