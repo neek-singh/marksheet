@@ -1414,10 +1414,10 @@
                         <div class="form-group"><label>Student Name</label><input type="text" id="s-name" placeholder="Full Name"></div>
                         <div class="form-group"><label>Father's Name</label><input type="text" id="s-father" placeholder="Father's Name"></div>
                         <div class="form-group"><label>Mother's Name</label><input type="text" id="s-mother" placeholder="Mother's Name"></div>
-                        <div class="form-group"><label>PEN No.</label><input type="text" id="s-aadhar" placeholder="Permanent Education Number"></div>
+                        <div class="form-group"><label>PEN No.</label><input type="text" id="s-aadhar" inputmode="numeric" placeholder="Permanent Education Number"></div>
                         <div class="form-group"><label>Date of Birth</label><input type="date" id="s-dob"></div>
-                        <div class="form-group"><label>Admission No.</label><input type="text" id="s-admission"></div>
-                        <div class="form-group"><label>Roll Number</label><input type="text" id="s-roll"></div>
+                        <div class="form-group"><label>Admission No.</label><input type="text" id="s-admission" inputmode="numeric"></div>
+                        <div class="form-group"><label>Roll Number</label><input type="text" id="s-roll" inputmode="numeric"></div>
                         <div class="form-group"><label>Caste</label><input type="text" id="s-caste"></div>
                         <div class="form-group"><label>Category</label><select id="s-category"><option>GENERAL</option><option>OBC</option><option>SC</option><option>ST</option></select></div>
                         <div class="form-group"><label>Medium</label><select id="s-medium"><option>HINDI</option><option>ENGLISH</option></select></div>
@@ -1525,6 +1525,7 @@
                             <div><label style="display:block; font-size:12px; color:var(--muted)">Admission No.</label><span id="prev-adm" style="font-weight:600">—</span></div>
                             <div><label style="display:block; font-size:12px; color:var(--muted)">PEN Number</label><span id="prev-pen" style="font-weight:600">—</span></div>
                             <div><label style="display:block; font-size:12px; color:var(--muted)">Medium</label><span id="prev-med" style="font-weight:600">—</span></div>
+                            <div style="grid-column: 1 / -1"><label style="display:block; font-size:12px; color:var(--muted)">Address</label><span id="prev-addr" style="font-weight:600">—</span></div>
                         </div>
 
                         <div class="marks-table-wrap" style="margin-top:20px">
@@ -1956,7 +1957,7 @@
                 }
                 showToast(editingId ? '✅ Student Info updated!' : '✅ Student Admitted!');
                 clearForm();
-                showPage('dashboard');
+                showPage('add-student');
             } catch (e) { showToast('Error: ' + e.message, 'error'); }
             finally { setLoading(btn, false); }
         }
@@ -2099,7 +2100,7 @@
             try {
                 await dbFetch(db.from('students').update(payload).eq('id', editingId), 'Save marks failed');
                 showToast('✅ Marks saved successfully!');
-                showPage('dashboard');
+                showPage('add-marks');
             } catch (e) { showToast('Save Error: ' + e.message, 'error'); }
             finally { setLoading(btn, false); }
         }
@@ -2135,7 +2136,7 @@
                 }
                 showToast(editingId ? '✅ Marksheet updated!' : '✅ Marksheet saved!');
                 clearForm();
-                showPage('dashboard');
+                showPage('add-student');
             } catch (e) { showToast('Error: ' + e.message, 'error'); }
             finally { setLoading(btn, false); }
         }
@@ -2640,9 +2641,10 @@
                 document.getElementById('prev-father').textContent = s.father_name || '—';
                 document.getElementById('prev-mother').textContent = s.mother_name || '—';
                 document.getElementById('prev-dob').textContent = s.dob || '—';
-                document.getElementById('prev-adm').textContent = s.admission_number || '—';
-                document.getElementById('prev-pen').textContent = s.aadhar_number || '—';
+                document.getElementById('prev-adm').textContent = s.admission_no || '—';
+                document.getElementById('prev-pen').textContent = s.pen_no || '—';
                 document.getElementById('prev-med').textContent = s.medium || '—';
+                document.getElementById('prev-addr').textContent = s.address || '—';
                 
                 const marks = s.marks || [];
                 const tbody = document.getElementById('prev-marks-tbody');
