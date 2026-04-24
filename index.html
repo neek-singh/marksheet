@@ -2649,9 +2649,9 @@
                 const avg = data.length ? Math.round(data.reduce((s, d) => s + (d.percentage || 0), 0) / data.length) : 0;
                 document.getElementById('stat-avg').textContent = avg + '%';
 
-                // ─── RENDER PENDING ACTIONS (Admin/Director Only) ───
+                // ─── RENDER PENDING ACTIONS (Admin/Director/Teacher) ───
                 const pendingCard = document.getElementById('pending-actions-card');
-                if (isHighAccess() && pendingStudents.length > 0) {
+                if ((isHighAccess() || currentUser.role.toLowerCase() === 'teacher') && pendingStudents.length > 0) {
                     pendingCard.style.display = 'block';
                     const list = document.getElementById('pending-list');
                     // Show top 15 pending students
