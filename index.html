@@ -2703,6 +2703,7 @@
                                         <th>Cmp ✅</th>
                                         <th>Pnd 🕒</th>
                                         <th>Status</th>
+                                        ${isHighAccess() ? '<th>Action</th>' : ''}
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -2723,6 +2724,7 @@
                                                         <span style="font-size:11px; font-family:var(--font-mono); color:var(--muted)">${pct}%</span>
                                                     </div>
                                                 </td>
+                                                ${isHighAccess() ? `<td><button class="btn btn-secondary btn-sm" onclick="downloadClassPDF('${c}')">⬇ PDF</button></td>` : ''}
                                             </tr>`;
                 }).join('')}
                                 </tbody>
