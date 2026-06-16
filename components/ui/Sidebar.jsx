@@ -11,7 +11,7 @@ export default function Sidebar({ currentPage, onChangePage, currentUser, onLogo
             return ['dashboard', 'add-student', 'students-list', 'marksheet', 'search', 'attendance', 'notices', 'download'].includes(page);
         }
         if (role === 'student' || role === 'parent') {
-            return ['dashboard', 'search', 'attendance', 'fees', 'notices'].includes(page);
+            return ['dashboard', 'notices'].includes(page);
         }
         return ['students-list', 'marksheet', 'fees', 'download'].includes(page);
     };

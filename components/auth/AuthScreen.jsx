@@ -37,18 +37,19 @@ const strings = {
     placeholderAdmissionNo: 'Ex: 1024',
     admissionNoTip: 'Enter the admission number exactly as registered in the school records.',
     
-    labelUniqueIdEmail: 'Unique ID / Email Address',
-    labelStaffEmail: 'Staff Email Address',
-    labelTeacherEmail: 'Teacher Email Address',
+    labelUniqueIdEmail: 'Unique ID',
+    labelStudentId: 'Student ID',
+    labelStaffEmail: 'Email ID',
+    labelTeacherEmail: 'Email ID',
     
-    placeholderLoginId: 'Ex: 1024 or P-1024 or staff@vidya.com',
-    placeholderStaffEmail: 'staff@vidya.com',
-    placeholderTeacherEmail: 'teacher@vidya.com',
+    placeholderLoginId: '',
+    placeholderStaffEmail: 'Enter your email ID',
+    placeholderTeacherEmail: 'Enter your email ID',
     
-    loginTipStudent: 'Login with your Admission Number (e.g. 1024) or email.',
-    loginTipParent: 'Login with your Parent ID (e.g. P-1024) or email.',
-    loginTipStaff: 'Login with your registered staff email.',
-    loginTipTeacher: 'Login with your registered teacher email.',
+    loginTipStudent: '',
+    loginTipParent: '',
+    loginTipStaff: '',
+    loginTipTeacher: '',
     
     labelPassword: 'Password',
     placeholderPassword: '••••••••',
@@ -233,7 +234,8 @@ export default function AuthScreen({ onAuthSuccess, showToast, onBackToWebsite, 
                 let targetFullName = '';
 
                 if (portalRole === 'student') {
-                    targetEmail = `${cleanAdmissionNo}@shrihans.com`.toLowerCase();
+                    const stdId = student.student_id ? student.student_id.trim().toUpperCase() : cleanAdmissionNo;
+                    targetEmail = `${stdId}@shrihans.com`.toLowerCase();
                     targetFullName = student.name;
                 } else {
                     targetEmail = `P-${cleanAdmissionNo}@shrihans.com`.toLowerCase();
@@ -284,8 +286,8 @@ export default function AuthScreen({ onAuthSuccess, showToast, onBackToWebsite, 
 
                 showToast(`🎉 Portal Access registered successfully for ${portalRole.toUpperCase()}!`, 'success');
                 
-                // Set the Login ID to the registered Unique ID and switch to Login Tab
-                setLoginId(portalRole === 'parent' ? `P-${cleanAdmissionNo}` : cleanAdmissionNo);
+                const registeredId = portalRole === 'parent' ? `P-${cleanAdmissionNo}` : (student.student_id ? student.student_id.trim().toUpperCase() : cleanAdmissionNo);
+                setLoginId(registeredId);
                 setAuthMode('login');
             }
         } catch (e) {
@@ -703,7 +705,8 @@ export default function AuthScreen({ onAuthSuccess, showToast, onBackToWebsite, 
                                     <label style={{ display: 'block', fontSize: '12px', color: '#cbd5e1', marginBottom: '6px', fontWeight: '500' }}>
                                         {selectedPortal === 'school' && strings.labelStaffEmail}
                                         {selectedPortal === 'teacher' && strings.labelTeacherEmail}
-                                        {(selectedPortal === 'student' || selectedPortal === 'parent') && strings.labelUniqueIdEmail}
+                                        {selectedPortal === 'student' && strings.labelStudentId}
+                                        {selectedPortal === 'parent' && strings.labelUniqueIdEmail}
                                     </label>
                                     <input
                                         type="text"

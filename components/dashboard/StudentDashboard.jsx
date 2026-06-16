@@ -68,7 +68,14 @@ const strings = {
     fineLateCharge: 'Fine / Late Charge',
     amountToPay: 'Amount to pay (₹) *',
     securedSslText: 'Secured via 256-bit SSL school processing net. UPI/Debit/Credit card accepted.',
-    cancel: 'Cancel'
+    cancel: 'Cancel',
+    timetableTabLabel: 'Class Timetable & Exams',
+    weeklyTimetableTitle: 'साप्ताहिक समय-सारणी (Class Timetable)',
+    examDateSheetTitle: 'अर्द्धवार्षिक परीक्षा समय-सारणी (Exam Date Sheet)',
+    dayLabel: 'Day',
+    timeLabel: 'Time',
+    recessLabel: 'आधी छुट्टी (Recess)',
+    examInstructions: 'Exam Guidelines & Instructions'
 };
 
 export default function StudentDashboard({
@@ -321,6 +328,7 @@ export default function StudentDashboard({
                     { id: 'overview', label: 'Dashboard Overview', icon: <Icons.Dashboard size={14} /> },
                     { id: 'profile', label: 'Profile & Digital ID', icon: <Icons.User size={14} /> },
                     { id: 'attendance', label: 'Attendance logs', icon: <Icons.Calendar size={14} /> },
+                    { id: 'schedule', label: 'Class Timetable & Exams', icon: <Icons.Calendar size={14} /> },
                     { id: 'academics', label: 'Results & Analytics', icon: <Icons.TrendUp size={14} /> },
                     { id: 'homework', label: 'Homework & Study Locker', icon: <Icons.Book size={14} /> },
                     { id: 'fees', label: 'Dues & Online Payment', icon: <Icons.Fee size={14} /> },
@@ -940,6 +948,113 @@ export default function StudentDashboard({
                                     </button>
                                 </div>
                             ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* TAB 8: CLASS TIMETABLE & EXAMS */}
+                {activePortalTab === 'schedule' && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '25px' }}>
+                        {/* Weekly Timetable Section */}
+                        <div>
+                            <div className="card-title" style={{ fontSize: '16px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <Icons.Calendar size={18} />
+                                <span>{strings.weeklyTimetableTitle}</span>
+                            </div>
+                            <p style={{ color: 'var(--text-secondary)', fontSize: '13px', marginBottom: '15px' }}>
+                                Class: <strong>{s.class} - {s.section || 'A'}</strong> | Medium: <strong>{s.medium || 'HINDI'}</strong>
+                            </p>
+                            <div className="table-scroll">
+                                <table className="results-table" style={{ width: '100%' }}>
+                                    <thead>
+                                        <tr>
+                                            <th>{strings.dayLabel}</th>
+                                            <th>P1<br /><span style={{ fontSize: '9px', fontWeight: 'normal', color: 'var(--muted)' }}>08:30 - 09:15</span></th>
+                                            <th>P2<br /><span style={{ fontSize: '9px', fontWeight: 'normal', color: 'var(--muted)' }}>09:15 - 10:00</span></th>
+                                            <th>P3<br /><span style={{ fontSize: '9px', fontWeight: 'normal', color: 'var(--muted)' }}>10:00 - 10:45</span></th>
+                                            <th style={{ background: 'var(--cream)', color: 'var(--muted)', textAlign: 'center', fontWeight: 'bold' }}>
+                                                {strings.recessLabel}
+                                            </th>
+                                            <th>P4<br /><span style={{ fontSize: '9px', fontWeight: 'normal', color: 'var(--muted)' }}>11:15 - 12:00</span></th>
+                                            <th>P5<br /><span style={{ fontSize: '9px', fontWeight: 'normal', color: 'var(--muted)' }}>12:00 - 12:45</span></th>
+                                            <th>P6<br /><span style={{ fontSize: '9px', fontWeight: 'normal', color: 'var(--muted)' }}>12:45 - 01:30</span></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {[
+                                            { day: 'Monday (सोमवार)', p1: 'Mathematics', p2: 'Science', p3: 'English', recess: 'आधी छुट्टी', p4: 'Hindi', p5: 'Social Studies', p6: 'Computers' },
+                                            { day: 'Tuesday (मंगलवार)', p1: 'Science', p2: 'English', p3: 'Mathematics', recess: 'आधी छुट्टी', p4: 'Social Studies', p5: 'Hindi', p6: 'Art / PT' },
+                                            { day: 'Wednesday (बुधवार)', p1: 'English', p2: 'Mathematics', p3: 'Science', recess: 'आधी छुट्टी', p4: 'Computers', p5: 'Sanskrit', p6: 'Hindi' },
+                                            { day: 'Thursday (गुरुवार)', p1: 'Mathematics', p2: 'Science', p3: 'English', recess: 'आधी छुट्टी', p4: 'Hindi', p5: 'Social Studies', p6: 'Art / PT' },
+                                            { day: 'Friday (शुक्रवार)', p1: 'Science', p2: 'English', p3: 'Mathematics', recess: 'आधी छुट्टी', p4: 'Social Studies', p5: 'Hindi', p6: 'Computers' },
+                                            { day: 'Saturday (शनिवार)', p1: 'English', p2: 'Mathematics', p3: 'Science', recess: 'आधी छुट्टी', p4: 'Computers', p5: 'Sanskrit', p6: 'Library / Quiz' }
+                                        ].map((row, idx) => (
+                                            <tr key={idx}>
+                                                <td><strong>{row.day}</strong></td>
+                                                <td>{row.p1}</td>
+                                                <td>{row.p2}</td>
+                                                <td>{row.p3}</td>
+                                                <td style={{ background: 'rgba(184,134,11,0.05)', color: 'var(--muted)', textAlign: 'center', fontWeight: '500', fontSize: '11px' }}>
+                                                    {row.recess}
+                                                </td>
+                                                <td>{row.p4}</td>
+                                                <td>{row.p5}</td>
+                                                <td>{row.p6}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        {/* Exam Date Sheet Section */}
+                        <div style={{ marginTop: '15px' }}>
+                            <div className="card-title" style={{ fontSize: '16px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <Icons.Clipboard size={18} />
+                                <span>{strings.examDateSheetTitle}</span>
+                            </div>
+                            <div className="table-scroll">
+                                <table className="results-table" style={{ width: '100%' }}>
+                                    <thead>
+                                        <tr>
+                                            <th>{strings.date} & {strings.dayLabel}</th>
+                                            <th>{strings.subjectLabel}</th>
+                                            <th>{strings.timeLabel}</th>
+                                            <th>Room / Hall No</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {[
+                                            { date: '2026-09-14 (Monday)', subject: 'English (अंग्रेजी)', time: '09:00 AM - 12:00 PM', room: 'Class Room 101' },
+                                            { date: '2026-09-16 (Wednesday)', subject: 'Mathematics (गणित)', time: '09:00 AM - 12:00 PM', room: 'Class Room 101' },
+                                            { date: '2026-09-18 (Friday)', subject: 'Science (विज्ञान)', time: '09:00 AM - 12:00 PM', room: 'Class Room 101' },
+                                            { date: '2026-09-21 (Monday)', subject: 'Social Science (सामाजिक विज्ञान)', time: '09:00 AM - 12:00 PM', room: 'Class Room 101' },
+                                            { date: '2026-09-23 (Wednesday)', subject: 'Hindi (हिंदी)', time: '09:00 AM - 12:00 PM', room: 'Class Room 101' },
+                                            { date: '2026-09-25 (Friday)', subject: 'Sanskrit / Computers (संस्कृत / कंप्यूटर)', time: '09:00 AM - 12:00 PM', room: 'Class Room 102' }
+                                        ].map((exam, idx) => (
+                                            <tr key={idx}>
+                                                <td><strong>{exam.date}</strong></td>
+                                                <td><strong>{exam.subject}</strong></td>
+                                                <td>{exam.time}</td>
+                                                <td><span style={{ padding: '3px 8px', borderRadius: '4px', background: 'var(--cream)', fontSize: '11px', fontWeight: 'bold' }}>{exam.room}</span></td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        {/* Exam Guidelines Card */}
+                        <div style={{ background: 'rgba(184,134,11,0.05)', border: '1px solid rgba(184,134,11,0.15)', padding: '20px', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                            <strong style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px', color: 'var(--primary)' }}>
+                                <Icons.Warning size={16} color="var(--gold)" /> {strings.examInstructions}
+                            </strong>
+                            <ul style={{ paddingLeft: '20px', fontSize: '12px', color: 'var(--muted)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                <li>सभी विद्यार्थियों को परीक्षा हॉल में अपना डिजिटल आईडी कार्ड लाना अनिवार्य है। (Bringing Digital ID card is mandatory).</li>
+                                <li>कृपया परीक्षा शुरू होने से 15 मिनट पहले अपनी सीट पर बैठें। (Be seated 15 minutes prior).</li>
+                                <li>परीक्षा के दौरान मोबाइल फोन या स्मार्ट वॉच पूर्णतः वर्जित हैं। (Smart gadgets/phones are strictly prohibited).</li>
+                                <li>परीक्षा समाप्ति के पश्चात स्कूल बस दोपहर 12:30 बजे रवाना होगी। (School bus will depart at 12:30 PM).</li>
+                            </ul>
                         </div>
                     </div>
                 )}

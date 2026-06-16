@@ -87,11 +87,14 @@ export function AppContextProvider({ children }) {
         if (roleStr === 'student' || roleStr === 'parent') {
             setPersonalLoading(true);
             try {
-                const admissionNo = email.split('@')[0].replace('P-', '').replace('p-', '').toUpperCase();
-                const { data, error } = await db
-                    .from('students')
-                    .select('*')
-                    .eq('admission_no', admissionNo);
+                const emailPrefix = email.split('@')[0].replace('P-', '').replace('p-', '').toUpperCase();
+                let query = db.from('students').select('*');
+                if (emailPrefix.startsWith('SH')) {
+                    query = query.eq('student_id', emailPrefix);
+                } else {
+                    query = query.eq('admission_no', emailPrefix);
+                }
+                const { data, error } = await query;
                 
                 if (data && data.length > 0) {
                     setPersonalStudent(data[0]);
@@ -261,6 +264,23 @@ export function AppContextProvider({ children }) {
         initAuth();
     }, []);
 
+    // Load activeSession from localStorage on client-side mount
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const savedSession = localStorage.getItem('activeSession');
+            if (savedSession) {
+                setActiveSession(savedSession);
+            }
+        }
+    }, []);
+
+    // Save activeSession to localStorage whenever it changes
+    useEffect(() => {
+        if (typeof window !== 'undefined' && activeSession) {
+            localStorage.setItem('activeSession', activeSession);
+        }
+    }, [activeSession]);
+
     useEffect(() => {
         if (currentUser) {
             loadDashboardData();
@@ -277,7 +297,7 @@ export function AppContextProvider({ children }) {
         setPersonalStudent(null);
         setShowLogin(false);
         showToast('Logged out successfully!', 'success');
-        router.push('/');
+        window.location.href = '/';
     };
 
     const handleDeleteStudent = async (id, callback) => {
@@ -555,7 +575,50 @@ export function AppContextProvider({ children }) {
                         onToggleSidebar={toggleSidebar}
                     />
                     <div className="content">
-                        {children}
+                        {(() => {
+                            const role = currentUser?.role?.toLowerCase() || 'assistant';
+                            const isHighAccess = role === 'admin' || role === 'director';
+                            let hasPermission = true;
+
+                            if (!isHighAccess) {
+                                let pageKey = 'dashboard';
+                                if (pathname === '/') pageKey = 'dashboard';
+                                else if (pathname.startsWith('/students/admission')) pageKey = 'add-student';
+                                else if (pathname.startsWith('/students')) pageKey = 'students-list';
+                                else if (pathname.startsWith('/marksheet')) pageKey = 'marksheet';
+                                else if (pathname.startsWith('/search')) pageKey = 'search';
+                                else if (pathname.startsWith('/attendance')) pageKey = 'attendance';
+                                else if (pathname.startsWith('/fees')) pageKey = 'fees';
+                                else if (pathname.startsWith('/teachers')) pageKey = 'teachers';
+                                else if (pathname.startsWith('/notices')) pageKey = 'notices';
+                                else if (pathname.startsWith('/promotion')) pageKey = 'promotion';
+                                else if (pathname.startsWith('/download')) pageKey = 'download';
+
+                                if (role === 'teacher') {
+                                    hasPermission = ['dashboard', 'add-student', 'students-list', 'marksheet', 'search', 'attendance', 'notices', 'download'].includes(pageKey);
+                                } else if (role === 'student' || role === 'parent') {
+                                    hasPermission = ['dashboard', 'notices'].includes(pageKey);
+                                } else {
+                                    // Assistant
+                                    hasPermission = ['dashboard', 'students-list', 'marksheet', 'fees', 'download'].includes(pageKey);
+                                }
+                            }
+
+                            if (!hasPermission) {
+                                return (
+                                    <div className="card" style={{ padding: '40px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '15px' }}>
+                                        <div style={{ color: 'var(--red)', fontSize: '48px' }}>⚠️</div>
+                                        <h3 style={{ color: 'var(--red)', margin: 0 }}>Access Denied (पहुंच अस्वीकृत)</h3>
+                                        <p style={{ color: 'var(--muted)', margin: 0 }}>You do not have permission to access this page.</p>
+                                        <button className="btn btn-primary" onClick={() => router.push('/')} style={{ marginTop: '10px' }}>
+                                            Go to Dashboard
+                                        </button>
+                                    </div>
+                                );
+                            }
+
+                            return children;
+                        })()}
                     </div>
                 </main>
 

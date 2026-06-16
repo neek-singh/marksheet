@@ -186,7 +186,12 @@ export default function MarksheetHub({
     }, [statusFilter]);
 
     useEffect(() => {
-        if (activeTab === 'student-registry') resetAndLoad({ session: activeSession });
+        if (activeTab === 'student-registry') {
+            resetAndLoad({ session: activeSession });
+        } else {
+            setInitialLoaded(false);
+            setStudents([]);
+        }
     }, [activeSession]);
 
     // Load on tab switch
@@ -194,7 +199,7 @@ export default function MarksheetHub({
         if (activeTab === 'student-registry' && !initialLoaded) {
             loadPage(0, true);
         }
-    }, [activeTab]);
+    }, [activeTab, initialLoaded]);
 
     // IntersectionObserver
     useEffect(() => {

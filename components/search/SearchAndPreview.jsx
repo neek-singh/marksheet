@@ -224,6 +224,17 @@ export default function SearchAndPreview({
     const [guardEmail, setGuardEmail] = useState('');
     const [parentLogin, setParentLogin] = useState(false);
 
+    // Parent Credential Generation states
+    const [parentCredPassword, setParentCredPassword] = useState('');
+    const [parentCredLoading, setParentCredLoading] = useState(false);
+    const [parentCredStatus, setParentCredStatus] = useState(null); // null | 'created' | 'exists'
+
+    // Student Credential Generation states
+    const [studentCredPassword, setStudentCredPassword] = useState('');
+    const [studentCredLoading, setStudentCredLoading] = useState(false);
+    const [studentCredStatus, setStudentCredStatus] = useState(null); // null | 'created' | 'exists'
+    const [tempStudentId, setTempStudentId] = useState('');
+
     // 3. MEDICAL FORM STATES
     const [medAllergies, setMedAllergies] = useState('None');
     const [medConditions, setMedConditions] = useState('None');
@@ -314,6 +325,18 @@ export default function SearchAndPreview({
             // Loads sub systems
             loadAttendanceRecords(previewStudent.id);
             loadFeeLedger(previewStudent);
+
+            setParentCredPassword('');
+            setParentCredStatus(null);
+            setStudentCredPassword('');
+            setStudentCredStatus(null);
+            
+            if (previewStudent.student_id) {
+                setTempStudentId(previewStudent.student_id);
+            } else {
+                fetchNextStudentId();
+            }
+            checkAccountExistence(previewStudent);
         }
     }, [previewStudent]);
 
@@ -469,6 +492,184 @@ export default function SearchAndPreview({
         } catch (e) {
             console.error('Update failed:', e);
             showToast('Update failed: ' + e.message, 'error');
+        }
+    };
+
+    // GENERATE PARENT PORTAL CREDENTIALS
+    const generateRandomPassword = () => {
+        const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789@#';
+        let pwd = '';
+        for (let i = 0; i < 10; i++) pwd += chars[Math.floor(Math.random() * chars.length)];
+        setParentCredPassword(pwd);
+    };
+
+    const handleCreateParentAccount = async () => {
+        if (!parentCredPassword || parentCredPassword.length < 6) {
+            showToast('Pehle password generate ya enter karein (min 6 characters)', 'error');
+            return;
+        }
+        setParentCredLoading(true);
+        try {
+            const admNo = previewStudent.admission_no.trim().toUpperCase();
+            const parentEmail = `P-${admNo}@shrihans.com`.toLowerCase();
+            const parentFullName = `Parent of ${previewStudent.name}`;
+
+            const { data: signUpData, error: signUpError } = await db.auth.signUp({
+                email: parentEmail,
+                password: parentCredPassword,
+                options: { data: { full_name: parentFullName } }
+            });
+
+            if (signUpError) {
+                if (signUpError.status === 429) throw new Error('Too many attempts! 10-15 min baad try karein.');
+                throw signUpError;
+            }
+
+            if (signUpData?.user && signUpData?.user?.identities?.length === 0) {
+                setParentCredStatus('exists');
+                showToast('⚠️ Is student ke parent ka account pehle se registered hai!', 'info');
+                setParentCredLoading(false);
+                return;
+            }
+
+            // Update profile role to 'parent'
+            if (signUpData?.user) {
+                await db.from('profiles').update({
+                    role: 'parent',
+                    full_name: parentFullName,
+                    email: parentEmail
+                }).eq('id', signUpData.user.id);
+            }
+
+            // Immediately sign out the auto-created session
+            await db.auth.signOut();
+
+            setParentCredStatus('created');
+            showToast(`✅ Parent account create ho gaya! ID: P-${admNo}`, 'success');
+
+            // Save login access flag
+            handleUpdateStudent({}, { parent_details: {
+                ...(previewStudent.extended_info?.parent_details || {}),
+                parent_login_access: true
+            } });
+        } catch (e) {
+            console.error('Parent account error:', e);
+            showToast('Error: ' + e.message, 'error');
+        } finally {
+            setParentCredLoading(false);
+        }
+    };
+
+    // GENERATE STUDENT PORTAL CREDENTIALS
+    const fetchNextStudentId = async () => {
+        try {
+            const { data: allIds, error } = await db.from('students').select('student_id');
+            if (error) throw error;
+            let nextNum = 1;
+            if (allIds && allIds.length > 0) {
+                const nums = allIds.map(s => {
+                    if (!s.student_id) return 0;
+                    const m = s.student_id.match(/\d+/);
+                    return m ? parseInt(m[0], 10) : 0;
+                });
+                nextNum = Math.max(...nums) + 1;
+            }
+            const generatedId = `SH${String(nextNum).padStart(3, '0')}`;
+            setTempStudentId(generatedId);
+        } catch (e) {
+            console.error('Error generating student id:', e);
+            setTempStudentId('SH001'); // fallback
+        }
+    };
+
+    const checkAccountExistence = async (studentObj) => {
+        if (!studentObj) return;
+        const admNo = studentObj.admission_no.trim().toUpperCase();
+        const parentEmail = `P-${admNo}@shrihans.com`.toLowerCase();
+        
+        // Check parent
+        const { data: parentProfile } = await db.from('profiles').select('role').eq('email', parentEmail).single();
+        if (parentProfile) {
+            setParentCredStatus('exists');
+        }
+
+        // Check student
+        let stdId = studentObj.student_id;
+        if (stdId) {
+            const studentEmail = `${stdId}@shrihans.com`.toLowerCase();
+            const { data: studentProfile } = await db.from('profiles').select('role').eq('email', studentEmail).single();
+            if (studentProfile) {
+                setStudentCredStatus('exists');
+            }
+        } else {
+            // Also check legacy
+            const legacyEmail = `${admNo}@shrihans.com`.toLowerCase();
+            const { data: legacyProfile } = await db.from('profiles').select('role').eq('email', legacyEmail).single();
+            if (legacyProfile) {
+                setStudentCredStatus('exists');
+            }
+        }
+    };
+
+    const handleCreateStudentAccount = async () => {
+        if (!studentCredPassword || studentCredPassword.length < 6) {
+            showToast('Pehle password enter/type karein (min 6 characters)', 'error');
+            return;
+        }
+        setStudentCredLoading(true);
+        try {
+            const stdId = tempStudentId.trim().toUpperCase();
+            const studentEmail = `${stdId}@shrihans.com`.toLowerCase();
+            const studentFullName = previewStudent.name;
+
+            // 1. SignUp
+            const { data: signUpData, error: signUpError } = await db.auth.signUp({
+                email: studentEmail,
+                password: studentCredPassword,
+                options: { data: { full_name: studentFullName } }
+            });
+
+            if (signUpError) {
+                if (signUpError.status === 429) throw new Error('Too many attempts! 10-15 min baad try karein.');
+                throw signUpError;
+            }
+
+            if (signUpData?.user && signUpData?.user?.identities?.length === 0) {
+                setStudentCredStatus('exists');
+                showToast('⚠️ Is student ka account pehle se registered hai!', 'info');
+                setStudentCredLoading(false);
+                return;
+            }
+
+            // 2. Update profile role to 'student'
+            if (signUpData?.user) {
+                await db.from('profiles').update({
+                    role: 'student',
+                    full_name: studentFullName,
+                    email: studentEmail
+                }).eq('id', signUpData.user.id);
+            }
+
+            // 3. Update student table column `student_id`
+            const { error: updateErr } = await db.from('students').update({
+                student_id: stdId
+            }).eq('id', previewStudent.id);
+            
+            if (updateErr) throw updateErr;
+
+            // Immediately sign out the auto-created session
+            await db.auth.signOut();
+
+            setStudentCredStatus('created');
+            showToast(`✅ Student account create ho gaya! ID: ${stdId}`, 'success');
+
+            // Update local state previewStudent
+            setPreviewStudent(prev => ({ ...prev, student_id: stdId }));
+        } catch (e) {
+            console.error('Student account error:', e);
+            showToast('Error: ' + e.message, 'error');
+        } finally {
+            setStudentCredLoading(false);
         }
     };
 
@@ -931,18 +1132,166 @@ export default function SearchAndPreview({
                                         <input type="email" value={guardEmail} onChange={(e) => setGuardEmail(e.target.value)} />
                                     </div>
                                     
-                                    {/* Parent Portal Access */}
-                                    <div className="form-group" style={{ gridColumn: 'span 2', background: 'rgba(184,134,11,0.05)', padding: '15px', borderRadius: '8px', border: '1px solid rgba(184,134,11,0.15)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <div>
-                                            <strong style={{ display: 'block', fontSize: '14px', color: 'var(--primary)' }}>Parent Login Access Portal</strong>
-                                            <span style={{ fontSize: '12px', color: 'var(--muted)' }}>{strings.generateCredentials}{ext.email || 'N/A'}'</span>
+                                    {/* ── Parent Credential Generator ── */}
+                                    <div style={{ gridColumn: 'span 2', marginTop: '4px', border: parentCredStatus === 'created' ? '2px solid rgba(52,211,153,0.4)' : '2px dashed rgba(184,134,11,0.3)', borderRadius: '12px', padding: '20px', background: parentCredStatus === 'created' ? 'linear-gradient(135deg, #0f2a1a 0%, #1a3c2a 100%)' : 'linear-gradient(135deg, rgba(184,134,11,0.04) 0%, rgba(255,255,255,0) 100%)' }}>
+
+                                        {/* Header */}
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '18px' }}>
+                                            <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: parentCredStatus === 'created' ? 'rgba(52,211,153,0.15)' : 'var(--cream)', border: parentCredStatus === 'created' ? '2px solid rgba(52,211,153,0.4)' : '2px solid rgba(184,134,11,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px' }}>
+                                                {parentCredStatus === 'created' ? '✅' : '🔐'}
+                                            </div>
+                                            <div>
+                                                <strong style={{ display: 'block', fontSize: '14px', color: parentCredStatus === 'created' ? '#7eca8d' : 'var(--ink)' }}>Parent Portal Credential Generator</strong>
+                                                <span style={{ fontSize: '11px', color: parentCredStatus === 'created' ? '#64748b' : 'var(--muted)' }}>
+                                                    {parentCredStatus === 'created' ? 'Account create ho gaya — credentials parent ko share karein' : 'Parent ke liye Unique ID aur password set karein'}
+                                                </span>
+                                            </div>
+                                            {parentCredStatus === 'exists' && (
+                                                <span style={{ marginLeft: 'auto', background: '#fff2cc', color: '#7d5a00', padding: '4px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: 700 }}>⚠️ Already Registered</span>
+                                            )}
+                                            {parentCredStatus === 'created' && (
+                                                <span style={{ marginLeft: 'auto', background: 'rgba(52,211,153,0.15)', color: '#34d399', padding: '4px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, border: '1px solid rgba(52,211,153,0.3)' }}>✅ Account Created</span>
+                                            )}
                                         </div>
-                                        <div>
-                                            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}>
-                                                <input type="checkbox" checked={parentLogin} onChange={(e) => setParentLogin(e.target.checked)} />
-                                                Active Portal Access
-                                            </label>
+
+                                        {/* Always visible: ID + Password */}
+                                        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '16px' }}>
+                                            {/* Unique ID */}
+                                            <div style={{ flex: 1, minWidth: '150px', background: parentCredStatus === 'created' ? 'rgba(251,191,36,0.08)' : 'var(--cream)', borderRadius: '10px', padding: '14px 16px', border: parentCredStatus === 'created' ? '1px solid rgba(251,191,36,0.25)' : '1px solid rgba(184,134,11,0.25)' }}>
+                                                <div style={{ fontSize: '10px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }}>🪪 Parent Unique ID</div>
+                                                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '20px', fontWeight: 800, color: '#fbbf24', letterSpacing: '0.04em', marginBottom: '10px' }}>
+                                                    P-{previewStudent.admission_no?.toUpperCase()}
+                                                </div>
+                                                <button type="button" onClick={() => { navigator.clipboard.writeText(`P-${previewStudent.admission_no?.toUpperCase()}`); showToast('Unique ID copied!', 'success'); }}
+                                                    style={{ fontSize: '11px', padding: '5px 12px', background: 'rgba(251,191,36,0.15)', color: '#b8860b', border: '1px solid rgba(184,134,11,0.3)', borderRadius: '6px', cursor: 'pointer', fontWeight: 700 }}>
+                                                    📋 Copy ID
+                                                </button>
+                                            </div>
+
+                                            {/* Password */}
+                                            <div style={{ flex: 1, minWidth: '150px', background: parentCredStatus === 'created' ? 'rgba(52,211,153,0.08)' : '#f8fafc', borderRadius: '10px', padding: '14px 16px', border: parentCredStatus === 'created' ? '1px solid rgba(52,211,153,0.25)' : '1px solid var(--border)' }}>
+                                                <div style={{ fontSize: '10px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }}>🔑 Password</div>
+                                                {parentCredStatus === 'created' ? (
+                                                    <>
+                                                        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '20px', fontWeight: 800, color: '#34d399', letterSpacing: '0.04em', marginBottom: '10px', wordBreak: 'break-all' }}>
+                                                            {parentCredPassword}
+                                                        </div>
+                                                        <button type="button" onClick={() => { navigator.clipboard.writeText(parentCredPassword); showToast('Password copied!', 'success'); }}
+                                                            style={{ fontSize: '11px', padding: '5px 12px', background: 'rgba(52,211,153,0.15)', color: '#34d399', border: '1px solid rgba(52,211,153,0.35)', borderRadius: '6px', cursor: 'pointer', fontWeight: 700 }}>
+                                                            📋 Copy Password
+                                                        </button>
+                                                    </>
+                                                ) : (
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Password type karein (min 6 char)"
+                                                        value={parentCredPassword}
+                                                        onChange={(e) => setParentCredPassword(e.target.value)}
+                                                        style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', fontFamily: 'var(--font-mono)', boxSizing: 'border-box', background: '#fff' }}
+                                                    />
+                                                )}
+                                            </div>
                                         </div>
+
+                                        {/* Create button — only shown when not yet created */}
+                                        {parentCredStatus !== 'created' && (
+                                            <>
+                                                <button
+                                                    type="button"
+                                                    onClick={handleCreateParentAccount}
+                                                    disabled={parentCredLoading || !parentCredPassword}
+                                                    style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 20px', background: parentCredLoading ? '#ccc' : 'var(--primary)', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '13px', cursor: parentCredLoading || !parentCredPassword ? 'not-allowed' : 'pointer', opacity: !parentCredPassword ? 0.6 : 1, transition: 'all 0.2s' }}
+                                                >
+                                                    {parentCredLoading ? '⏳ Creating...' : '🔑 Parent Account Create Karein'}
+                                                </button>
+                                                {parentCredStatus === 'exists' && (
+                                                    <div style={{ marginTop: '12px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '8px', padding: '12px 16px', fontSize: '12px', color: '#92400e' }}>
+                                                        ⚠️ Is student ke parent ka account pehle se registered hai.
+                                                    </div>
+                                                )}
+                                            </>
+                                        )}
+                                    </div>
+
+                                    {/* ── Student Credential Generator ── */}
+                                    <div style={{ gridColumn: 'span 2', marginTop: '12px', border: studentCredStatus === 'created' ? '2px solid rgba(52,211,153,0.4)' : '2px dashed rgba(184,134,11,0.3)', borderRadius: '12px', padding: '20px', background: studentCredStatus === 'created' ? 'linear-gradient(135deg, #0f2a1a 0%, #1a3c2a 100%)' : 'linear-gradient(135deg, rgba(184,134,11,0.04) 0%, rgba(255,255,255,0) 100%)' }}>
+
+                                        {/* Header */}
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '18px' }}>
+                                            <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: studentCredStatus === 'created' ? 'rgba(52,211,153,0.15)' : 'var(--cream)', border: studentCredStatus === 'created' ? '2px solid rgba(52,211,153,0.4)' : '2px solid rgba(184,134,11,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px' }}>
+                                                {studentCredStatus === 'created' ? '✅' : '🎓'}
+                                            </div>
+                                            <div>
+                                                <strong style={{ display: 'block', fontSize: '14px', color: studentCredStatus === 'created' ? '#7eca8d' : 'var(--ink)' }}>Student Portal Credential Generator</strong>
+                                                <span style={{ fontSize: '11px', color: studentCredStatus === 'created' ? '#64748b' : 'var(--muted)' }}>
+                                                    {studentCredStatus === 'created' ? 'Account create ho gaya — credentials student ko share karein' : 'Student ke liye Custom ID aur password set karein'}
+                                                </span>
+                                            </div>
+                                            {studentCredStatus === 'exists' && (
+                                                <span style={{ marginLeft: 'auto', background: '#fff2cc', color: '#7d5a00', padding: '4px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: 700 }}>⚠️ Already Registered</span>
+                                            )}
+                                            {studentCredStatus === 'created' && (
+                                                <span style={{ marginLeft: 'auto', background: 'rgba(52,211,153,0.15)', color: '#34d399', padding: '4px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, border: '1px solid rgba(52,211,153,0.3)' }}>✅ Account Created</span>
+                                            )}
+                                        </div>
+
+                                        {/* Always visible: ID + Password */}
+                                        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '16px' }}>
+                                            {/* Unique ID */}
+                                            <div style={{ flex: 1, minWidth: '150px', background: studentCredStatus === 'created' ? 'rgba(251,191,36,0.08)' : 'var(--cream)', borderRadius: '10px', padding: '14px 16px', border: studentCredStatus === 'created' ? '1px solid rgba(251,191,36,0.25)' : '1px solid rgba(184,134,11,0.25)' }}>
+                                                <div style={{ fontSize: '10px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }}>🪪 Student Unique ID</div>
+                                                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '20px', fontWeight: 800, color: '#fbbf24', letterSpacing: '0.04em', marginBottom: '10px' }}>
+                                                    {tempStudentId || 'SH001'}
+                                                </div>
+                                                <button type="button" onClick={() => { navigator.clipboard.writeText(tempStudentId || 'SH001'); showToast('Student ID copied!', 'success'); }}
+                                                    style={{ fontSize: '11px', padding: '5px 12px', background: 'rgba(251,191,36,0.15)', color: '#b8860b', border: '1px solid rgba(184,134,11,0.3)', borderRadius: '6px', cursor: 'pointer', fontWeight: 700 }}>
+                                                    📋 Copy ID
+                                                </button>
+                                            </div>
+
+                                            {/* Password */}
+                                            <div style={{ flex: 1, minWidth: '150px', background: studentCredStatus === 'created' ? 'rgba(52,211,153,0.08)' : '#f8fafc', borderRadius: '10px', padding: '14px 16px', border: studentCredStatus === 'created' ? '1px solid rgba(52,211,153,0.25)' : '1px solid var(--border)' }}>
+                                                <div style={{ fontSize: '10px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }}>🔑 Password</div>
+                                                {studentCredStatus === 'created' ? (
+                                                    <>
+                                                        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '20px', fontWeight: 800, color: '#34d399', letterSpacing: '0.04em', marginBottom: '10px', wordBreak: 'break-all' }}>
+                                                            {studentCredPassword}
+                                                        </div>
+                                                        <button type="button" onClick={() => { navigator.clipboard.writeText(studentCredPassword); showToast('Password copied!', 'success'); }}
+                                                            style={{ fontSize: '11px', padding: '5px 12px', background: 'rgba(52,211,153,0.15)', color: '#34d399', border: '1px solid rgba(52,211,153,0.35)', borderRadius: '6px', cursor: 'pointer', fontWeight: 700 }}>
+                                                            📋 Copy Password
+                                                        </button>
+                                                    </>
+                                                ) : (
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Password type karein (min 6 char)"
+                                                        value={studentCredPassword}
+                                                        onChange={(e) => setStudentCredPassword(e.target.value)}
+                                                        style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', fontFamily: 'var(--font-mono)', boxSizing: 'border-box', background: '#fff' }}
+                                                    />
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Create button — only shown when not yet created */}
+                                        {studentCredStatus !== 'created' && (
+                                            <>
+                                                <button
+                                                    type="button"
+                                                    onClick={handleCreateStudentAccount}
+                                                    disabled={studentCredLoading || !studentCredPassword}
+                                                    style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 20px', background: studentCredLoading ? '#ccc' : 'var(--primary)', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '13px', cursor: studentCredLoading || !studentCredPassword ? 'not-allowed' : 'pointer', opacity: !studentCredPassword ? 0.6 : 1, transition: 'all 0.2s' }}
+                                                >
+                                                    {studentCredLoading ? '⏳ Creating...' : '🔑 Student Account Create Karein'}
+                                                </button>
+                                                {studentCredStatus === 'exists' && (
+                                                    <div style={{ marginTop: '12px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '8px', padding: '12px 16px', fontSize: '12px', color: '#92400e' }}>
+                                                        ⚠️ Is student ka account pehle se registered hai.
+                                                    </div>
+                                                )}
+                                            </>
+                                        )}
                                     </div>
                                 </div>
                                 <div style={{ marginTop: '20px', textAlign: 'right' }}>
