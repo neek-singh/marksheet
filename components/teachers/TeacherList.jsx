@@ -197,8 +197,9 @@ export default function TeacherList({ currentUser, showToast }) {
     const isHighAccess = role === 'admin' || role === 'director';
 
     useEffect(() => {
+        if (!currentUser) return;
         loadData();
-    }, []);
+    }, [currentUser]);
 
     useEffect(() => {
         if (editingTeacher) {

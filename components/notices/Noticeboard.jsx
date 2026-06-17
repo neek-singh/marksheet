@@ -19,8 +19,9 @@ export default function Noticeboard({ currentUser, showToast }) {
     const isHighAccess = role === 'admin' || role === 'director';
 
     useEffect(() => {
+        if (!currentUser) return;
         loadNotices();
-    }, []);
+    }, [currentUser]);
 
     const loadNotices = async () => {
         setLoading(true);

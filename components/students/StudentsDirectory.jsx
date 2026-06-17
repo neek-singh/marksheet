@@ -182,9 +182,9 @@ export default function StudentsDirectory() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <style>{shimmerCSS}</style>
 
-            <div className="card" style={{ padding: '24px' }}>
+            <div className="card student-dir-card">
                 {/* Header */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid var(--border)', paddingBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
+                <div className="directory-header">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
                         <div className="card-title" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
                             <Icons.Student size={18} />
@@ -227,13 +227,12 @@ export default function StudentsDirectory() {
                     {/* Class chips */}
                     <div>
                         <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--muted)', marginBottom: '8px', display: 'block' }}>Filter by Class:</span>
-                        <div className="filter-chips" style={{ flexWrap: 'wrap', gap: '8px' }}>
+                        <div className="filter-chips">
                             {classesList.map(cls => (
                                 <div
                                     key={cls}
                                     className={`chip ${selectedClass === cls ? 'active' : ''}`}
                                     onClick={() => setSelectedClass(cls)}
-                                    style={{ padding: '5px 12px', fontSize: '12px', borderRadius: '15px' }}
                                 >
                                     {cls === 'all' ? 'All Classes' : `Class ${cls}`}
                                 </div>
@@ -244,13 +243,12 @@ export default function StudentsDirectory() {
                     {/* Medium chips */}
                     <div>
                         <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--muted)', marginBottom: '8px', display: 'block' }}>Filter by Medium:</span>
-                        <div className="filter-chips" style={{ flexWrap: 'wrap', gap: '8px' }}>
+                        <div className="filter-chips">
                             {mediumsList.map(med => (
                                 <div
                                     key={med}
                                     className={`chip ${selectedMedium === med ? 'active' : ''}`}
                                     onClick={() => setSelectedMedium(med)}
-                                    style={{ padding: '5px 12px', fontSize: '12px', borderRadius: '15px' }}
                                 >
                                     {med === 'all' ? 'All Mediums' : med}
                                 </div>
@@ -406,9 +404,9 @@ export default function StudentsDirectory() {
                         )}
 
                         {/* Mobile Cards */}
-                        <div className="student-cards" style={{ flexDirection: 'column', gap: '12px', marginTop: '10px' }}>
+                        <div className="student-cards" style={{ marginTop: '10px' }}>
                             {filteredStudents.map(s => (
-                                <div className="student-card" key={s.id} style={{ border: '1px solid var(--border)', borderRadius: '12px', padding: '16px', background: '#ffffff' }}>
+                                <div className="student-card" key={s.id}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                                         <div style={{ fontWeight: '700', fontSize: '15px' }}>{s.name}</div>
                                         <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--muted)' }}>
@@ -430,16 +428,16 @@ export default function StudentsDirectory() {
                                             Session: {s.session || '2025-26'}
                                         </span>
                                     </div>
-                                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                                        <button className="btn btn-info btn-sm" onClick={() => router.push(`/search?preview=${s.id}`)} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                                            <Icons.Eye size={12} /> View
+                                    <div className="student-card-actions">
+                                        <button className="btn btn-info btn-sm" onClick={() => router.push(`/search?preview=${s.id}`)}>
+                                            <Icons.Eye size={13} /> View
                                         </button>
-                                        <button className="btn btn-secondary btn-sm" onClick={() => router.push(`/students/admission?edit=${s.id}`)} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                        <button className="btn btn-secondary btn-sm" onClick={() => router.push(`/students/admission?edit=${s.id}`)}>
                                             <Icons.Edit size={12} /> Edit
                                         </button>
                                         {isHighAccess && (
-                                            <button className="btn btn-danger btn-sm" onClick={() => handleDelete(s.id)} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '4px' }}>
-                                                <Icons.Trash size={12} />
+                                            <button className="btn btn-danger btn-sm" onClick={() => handleDelete(s.id)} title="Delete Student">
+                                                <Icons.Trash size={13} />
                                             </button>
                                         )}
                                     </div>

@@ -1,10 +1,12 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { db } from '../../lib/supabase';
+import { useAppContext } from '../../app/context/AppContext';
 import { getStudentStatus } from '../../lib/marksUtils';
 import { Icons } from '../ui/Icons';
 
 export default function StudentSelection({ onSelectStudent, onPreviewStudent, showToast }) {
+    const { currentUser } = useAppContext();
     const [searchName, setSearchName] = useState('');
     const [searchRoll, setSearchRoll] = useState('');
     const [selectedClass, setSelectedClass] = useState('all');
@@ -12,8 +14,9 @@ export default function StudentSelection({ onSelectStudent, onPreviewStudent, sh
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
+        if (!currentUser) return;
         loadPendingStudents();
-    }, [selectedClass]);
+    }, [selectedClass, currentUser]);
 
     const loadPendingStudents = async () => {
         setLoading(true);

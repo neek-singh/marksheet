@@ -3,15 +3,8 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAppContext } from '../context/AppContext';
 import { db } from '../../lib/supabase';
-import dynamic from 'next/dynamic';
-
-const MarksheetHub = dynamic(() => import('../../components/marks/MarksheetHub'), {
-    loading: () => <div className="loading" style={{ padding: '40px', textAlign: 'center' }}>Loading Marksheet Hub...</div>
-});
-
-const MarksEntryView = dynamic(() => import('../../components/marks/MarksEntryView'), {
-    loading: () => <div className="loading" style={{ padding: '40px', textAlign: 'center' }}>Loading Marks Entry...</div>
-});
+import MarksheetHub from '../../components/marks/MarksheetHub';
+import MarksEntryView from '../../components/marks/MarksEntryView';
 
 function MarksheetPageContent() {
     const router = useRouter();

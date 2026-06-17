@@ -251,7 +251,7 @@ export default function MarksheetHub({
     `;
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div className="marks-section" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <style>{shimmerCSS}</style>
 
             {/* ── Stats Panel ── */}
@@ -322,7 +322,7 @@ export default function MarksheetHub({
 
             {/* ── Tab 1: Class Summary ── */}
             {activeTab === 'class-summary' && (
-                <div className="card" style={{ padding: '24px' }}>
+                <div className="card" id="class-summary-list" style={{ padding: '24px' }}>
                     <div className="card-title" style={{ marginBottom: '16px', display: 'flex', alignItems: 'center' }}>
                         <Icons.School size={16} style={{ marginRight: '6px' }} /> कक्षा-वार प्रगति स्थिति (Class-wise Status)
                     </div>
@@ -423,11 +423,10 @@ export default function MarksheetHub({
 
                         <div>
                             <span style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--muted)', marginBottom: '8px', display: 'block' }}>Filter by Class:</span>
-                            <div className="filter-chips" style={{ flexWrap: 'wrap', gap: '8px' }}>
+                            <div className="filter-chips">
                                 {classesList.map(cls => (
                                     <div key={cls} className={`chip ${classFilter === cls ? 'active' : ''}`}
-                                        onClick={() => setClassFilter(cls)}
-                                        style={{ padding: '5px 12px', fontSize: '12.5px', borderRadius: '15px' }}>
+                                        onClick={() => setClassFilter(cls)}>
                                         {cls === 'all' ? 'All Classes' : `Class ${cls}`}
                                     </div>
                                 ))}
@@ -436,11 +435,10 @@ export default function MarksheetHub({
 
                         <div>
                             <span style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--muted)', marginBottom: '8px', display: 'block' }}>Filter by Status:</span>
-                            <div className="filter-chips" style={{ flexWrap: 'wrap', gap: '8px' }}>
+                            <div className="filter-chips">
                                 {statusList.map(st => (
                                     <div key={st} className={`chip ${statusFilter === st ? 'active' : ''}`}
-                                        onClick={() => setStatusFilter(st)}
-                                        style={{ padding: '5px 12px', fontSize: '12.5px', borderRadius: '15px' }}>
+                                        onClick={() => setStatusFilter(st)}>
                                         {st === 'all' ? 'All Status' : st}
                                     </div>
                                 ))}
@@ -598,7 +596,7 @@ export default function MarksheetHub({
                                                     {s.percentage || 0}%
                                                 </div>
                                             </div>
-                                            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', borderTop: '1px solid var(--border)', paddingTop: '10px', justifyContent: 'flex-end' }}>
+                                            <div className="student-card-actions">
                                                 <button className="btn btn-info btn-sm" style={{ display: 'inline-flex', alignItems: 'center' }} onClick={() => onPreviewStudent(s.id)}><Icons.Eye size={12} style={{ marginRight: '4px' }} /> View</button>
                                                 <button className="btn btn-primary btn-sm" style={{ display: 'inline-flex', alignItems: 'center' }} onClick={() => onEnterMarks(s)}><Icons.Clipboard size={12} style={{ marginRight: '4px' }} /> Marks</button>
                                                 {isHighAccess && <button className="btn btn-success btn-sm" style={{ display: 'inline-flex', alignItems: 'center' }} onClick={() => handleDownloadPDF(s.id)}><Icons.Download size={12} style={{ marginRight: '4px' }} /> PDF</button>}

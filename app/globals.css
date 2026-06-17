@@ -789,6 +789,7 @@ select:focus {
     font-family: var(--font-mono);
     transition: all 0.2s;
     user-select: none;
+    white-space: nowrap; /* Prevent chip text wrapping */
 }
 
 .chip:hover {
@@ -1131,6 +1132,78 @@ select:focus {
     }
 }
 
+/* ATTENDANCE & ANALYTICS UTILITIES */
+.attendance-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+}
+
+.attendance-stat-card {
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.attendance-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    gap: 20px;
+    padding-bottom: 2px;
+}
+
+.attendance-controls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.analytics-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+}
+
+.fees-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 20px;
+}
+
+.promotion-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 20px;
+}
+
+.promotion-controls-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.promotion-search-wrap {
+    width: 280px;
+}
+
+.promotion-footer-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    padding: 16px 20px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--cream);
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
 /* ─── TABLET: 1024–1100 ─── */
 @media (max-width: 1100px) {
     :root {
@@ -1212,8 +1285,69 @@ select:focus {
     }
 
     .student-cards {
-        display: block;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
         width: 100%;
+    }
+
+    /* Responsive Chips & Header */
+    .filter-chips {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding-bottom: 6px;
+        margin-bottom: 12px;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none; /* Firefox */
+    }
+    .filter-chips::-webkit-scrollbar {
+        display: none; /* Chrome, Safari, Opera */
+    }
+    .chip {
+        flex: 0 0 auto;
+    }
+
+    .directory-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 16px;
+    }
+    .directory-header .btn-primary {
+        width: 100%;
+    }
+
+    .student-card {
+        border-radius: 12px;
+        padding: 16px;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .student-card:active {
+        transform: scale(0.985);
+        box-shadow: var(--shadow-sm);
+    }
+    .student-card-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+        border-top: 1px solid var(--cream);
+        padding-top: 12px;
+    }
+    .student-card-actions .btn {
+        flex: 1;
+        justify-content: center;
+        font-size: 12px;
+        padding: 8px 12px;
+        border-radius: 6px;
+        height: 36px;
+    }
+    .student-card-actions .btn-danger {
+        flex: 0 0 40px;
+        padding: 8px 0;
+    }
+
+    .student-dir-card {
+        padding: 16px 12px !important;
     }
 
     .bottom-nav {
@@ -1270,6 +1404,155 @@ select:focus {
 
     .toast {
         bottom: calc(var(--bottom-nav-h) + 12px);
+    }
+
+    /* Attendance Mobile Rules */
+    .attendance-section .table-scroll,
+    .attendance-section .results-table-wrap {
+        display: block !important;
+    }
+
+    .attendance-stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 12px !important;
+    }
+
+    .attendance-stat-card {
+        padding: 12px !important;
+        gap: 8px !important;
+        flex-direction: column !important;
+        text-align: center !important;
+    }
+
+    .attendance-stat-card > div:first-child {
+        width: 38px !important;
+        height: 38px !important;
+    }
+
+    .attendance-stat-card svg {
+        width: 18px !important;
+        height: 18px !important;
+    }
+
+    .attendance-tabs {
+        gap: 10px !important;
+        overflow-x: auto !important;
+        white-space: nowrap !important;
+        flex-wrap: nowrap !important;
+        padding-bottom: 4px !important;
+        -webkit-overflow-scrolling: touch !important;
+        scrollbar-width: none !important;
+    }
+
+    .attendance-tabs::-webkit-scrollbar {
+        display: none !important;
+    }
+
+    .attendance-tabs button {
+        flex: 0 0 auto !important;
+        padding: 8px 12px !important;
+        font-size: 12.5px !important;
+    }
+
+    .attendance-controls {
+        grid-template-columns: 1fr 1fr !important;
+    }
+
+    .att-controls-btns {
+        grid-column: span 2 !important;
+        width: 100% !important;
+        margin-top: 5px !important;
+    }
+
+    .att-controls-btns .btn {
+        flex: 1 !important;
+        justify-content: center !important;
+    }
+
+    .analytics-stats-grid {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+
+    /* Fees Mobile Rules */
+    .fees-section .table-scroll,
+    .fees-section .results-table-wrap {
+        display: block !important;
+    }
+
+    .fees-grid {
+        grid-template-columns: 1fr !important;
+        gap: 16px !important;
+    }
+
+    .fees-section .btn {
+        white-space: normal !important;
+        text-align: center;
+    }
+
+    /* Promotion Mobile Rules */
+    .promotion-section .table-scroll,
+    .promotion-section .results-table-wrap {
+        display: block !important;
+    }
+
+    .promotion-grid {
+        grid-template-columns: 1fr !important;
+        gap: 16px !important;
+    }
+
+    .promotion-controls-grid {
+        grid-template-columns: 1fr !important;
+        gap: 10px !important;
+    }
+
+    .promotion-search-wrap {
+        width: 100% !important;
+    }
+
+    .promotion-footer-bar {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        padding: 14px 16px !important;
+        gap: 12px !important;
+    }
+
+    .promotion-footer-bar .btn {
+        width: 100% !important;
+        justify-content: center !important;
+    }
+
+    .promotion-footer-bar > div {
+        text-align: center;
+    }
+
+    .promotion-section .btn {
+        white-space: normal !important;
+        text-align: center;
+    }
+
+    .promotion-section .modal-actions {
+        flex-direction: column !important;
+        gap: 8px !important;
+    }
+
+    .promotion-section .modal-actions .btn {
+        width: 100% !important;
+        justify-content: center !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .att-btn-text {
+        display: none !important;
+    }
+    .att-btn::after {
+        content: attr(data-short) !important;
+        font-weight: 800 !important;
+    }
+    .att-btn {
+        min-width: 32px !important;
+        padding: 6px 0 !important;
     }
 }
 

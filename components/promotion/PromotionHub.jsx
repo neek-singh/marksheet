@@ -153,10 +153,11 @@ export default function PromotionHub() {
     }, [sourceClass, sourceSession, showToast]);
 
     useEffect(() => {
+        if (!currentUser) return;
         setStudentPage(0);
         setHasMore(true);
         fetchStudents(0, true);
-    }, [sourceClass, sourceSession, fetchStudents]);
+    }, [sourceClass, sourceSession, fetchStudents, currentUser]);
 
     // ── IntersectionObserver — auto-load next page when sentinel is visible ───
     useEffect(() => {
@@ -265,14 +266,14 @@ export default function PromotionHub() {
     };
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div className="promotion-section" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <style>{skeletonStyle}</style>
             
             {/* Selection Panels */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
+            <div className="promotion-grid">
                 
                 {/* Source parameters Card */}
-                <div className="card" style={{ padding: '24px' }}>
+                <div className="card student-dir-card">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="var(--gold)" style={{ width: '20px', height: '20px' }}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.637 10.637Z" />
@@ -280,7 +281,7 @@ export default function PromotionHub() {
                         <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 750 }}>Source Roster Details (वर्तमान विवरण)</h3>
                     </div>
                     
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                    <div className="promotion-controls-grid">
                         <div className="form-group">
                             <label style={{ fontWeight: '700', color: 'var(--muted)' }}>Select Class</label>
                             <select 
@@ -310,7 +311,7 @@ export default function PromotionHub() {
                 </div>
 
                 {/* Target parameters Card */}
-                <div className="card" style={{ padding: '24px' }}>
+                <div className="card student-dir-card">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="var(--gold)" style={{ width: '20px', height: '20px' }}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18 9 11.25l4.306 4.306a11.95 11.95 0 0 1 5.814-5.518l2.74-1.22m0 0-5.94-2.28m5.94 2.28-2.28 5.941" />
@@ -318,7 +319,7 @@ export default function PromotionHub() {
                         <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 750 }}>Target Promotion Target (प्रोन्नत लक्ष्य)</h3>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                    <div className="promotion-controls-grid">
                         <div className="form-group">
                             <label style={{ fontWeight: '700', color: 'var(--muted)' }}>Target Class</label>
                             <select 
@@ -354,7 +355,7 @@ export default function PromotionHub() {
 
             {/* Students Table Section */}
             {sourceClass && (
-                <div className="card" style={{ padding: '24px' }}>
+                <div className="card student-dir-card">
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px', marginBottom: '20px' }}>
                         <div>
                             <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 750 }}>
@@ -367,7 +368,7 @@ export default function PromotionHub() {
                         
                         {/* Search bar inside the roster list */}
                         {students.length > 0 && (
-                            <div style={{ width: '280px' }}>
+                            <div className="promotion-search-wrap">
                                 <input
                                     type="text"
                                     placeholder="Search student in this class..."
@@ -512,18 +513,7 @@ export default function PromotionHub() {
                             </div>
 
                             {/* Batch Action Footer Bar */}
-                            <div style={{ 
-                                display: 'flex', 
-                                justifyContent: 'space-between', 
-                                alignItems: 'center', 
-                                marginTop: '20px', 
-                                padding: '16px 20px', 
-                                border: '1px solid var(--border)',
-                                borderRadius: '10px',
-                                background: 'var(--cream)',
-                                flexWrap: 'wrap',
-                                gap: '15px'
-                            }}>
+                            <div className="promotion-footer-bar">
                                 <div style={{ fontSize: '13.5px', color: 'var(--charcoal)', fontWeight: '650' }}>
                                     Selected <span style={{ color: 'var(--gold)', fontWeight: '800' }}>{selectedIds.length}</span> of {filteredStudents.length} student{filteredStudents.length !== 1 && 's'}
                                 </div>
@@ -569,14 +559,11 @@ export default function PromotionHub() {
                     zIndex: 9999,
                     animation: 'fadeIn 0.2s ease-out'
                 }}>
-                    <div className="card" style={{
+                    <div className="card student-dir-card" style={{
                         maxWidth: '520px',
                         width: '90%',
-                        padding: '28px',
                         borderRadius: '16px',
-                        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-                        border: '1px solid var(--border)',
-                        background: '#ffffff'
+                        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
                     }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
                             <span style={{ display: 'flex', alignItems: 'center', color: 'var(--red)' }}>
@@ -622,7 +609,7 @@ export default function PromotionHub() {
                             </div>
                         </div>
 
-                        <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                        <div className="modal-actions">
                             <button 
                                 className="btn btn-secondary" 
                                 onClick={() => setShowConfirmModal(false)}

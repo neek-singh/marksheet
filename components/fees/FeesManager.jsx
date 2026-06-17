@@ -170,14 +170,14 @@ export default function FeesManager({ currentUser, showToast }) {
 
     // ── Reload students when sessionFilter changes ─────────────────────────────
     useEffect(() => {
-        if (isStudentOrParent) return;
+        if (!currentUser || isStudentOrParent) return;
         sessionFilterRef.current = sessionFilter;   // keep ref in sync
         setAllStudents([]);
         setStudentsLoaded(false);
         setStudentPage(0);
         setTotalStudentCount(null);
         loadStudentPage(0, true, sessionFilter);
-    }, [sessionFilter]);
+    }, [sessionFilter, currentUser]);
 
     // ── IntersectionObserver — auto-load next page when sentinel is visible ───
     useEffect(() => {
@@ -212,6 +212,8 @@ export default function FeesManager({ currentUser, showToast }) {
 
     // ── Initial data load ─────────────────────────────────────────────────────
     useEffect(() => {
+        if (!currentUser) return;
+        
         if (isStudentOrParent) {
             loadPersonalFees();
         } else {
@@ -484,10 +486,10 @@ export default function FeesManager({ currentUser, showToast }) {
     // ══════════════════════════════════════════════════════════════════
     if (isStudentOrParent) {
         return (
-            <div>
+            <div className="fees-section">
                 <style>{skeletonStyle}</style>
                 {paymentsLoading ? (
-                    <div className="card">
+                    <div className="card student-dir-card">
                         <div style={{ padding: '20px' }}>
                             {[1,2,3].map(i => (
                                 <div key={i} style={{ height: '18px', borderRadius: '6px', background: 'linear-gradient(90deg, var(--cream) 25%, #f0e8d4 50%, var(--cream) 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.4s ease-in-out infinite', marginBottom: '14px', width: i === 1 ? '60%' : i === 2 ? '80%' : '40%' }} />
@@ -510,7 +512,7 @@ export default function FeesManager({ currentUser, showToast }) {
                                 <div className="label">Balance Due</div>
                             </div>
                         </div>
-                        <div className="card">
+                        <div className="card student-dir-card">
                             <div className="card-title" style={{ display: 'flex', alignItems: 'center' }}>
                                 <Icons.Document size={16} style={{ marginRight: '6px' }} /> Fees Ledger &amp; Payment History
                             </div>
@@ -567,7 +569,7 @@ export default function FeesManager({ currentUser, showToast }) {
     // ADMIN / CLERK VIEW
     // ══════════════════════════════════════════════════════════════════
     return (
-        <div>
+        <div className="fees-section">
             <style>{skeletonStyle}</style>
 
             {/* ── Nav Tabs ── */}
@@ -608,7 +610,7 @@ export default function FeesManager({ currentUser, showToast }) {
                     </div>
 
                     {/* Student Search Card */}
-                    <div className="card" style={{ padding: '24px' }}>
+                    <div className="card student-dir-card">
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
                             <div className="card-title" style={{ margin: 0, display: 'flex', alignItems: 'center' }}>
                                 <Icons.Search size={16} style={{ marginRight: '6px' }} /> Student Dhundho — Fee Jodo
@@ -631,7 +633,7 @@ export default function FeesManager({ currentUser, showToast }) {
                                 <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--gold)', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: '8px' }}>
                                     <Icons.Calendar size={12} style={{ marginRight: '4px' }} /> Session Filter
                                 </span>
-                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '7px' }}>
+                                <div className="filter-chips" style={{ gap: '7px', marginBottom: 0 }}>
                                     <div
                                         onClick={() => setSessionFilter('all')}
                                         style={{
@@ -684,7 +686,7 @@ export default function FeesManager({ currentUser, showToast }) {
                             {/* Class Filter Chips */}
                             <div>
                                 <span style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--muted)', marginBottom: '8px', display: 'block' }}>Class Filter:</span>
-                                <div className="filter-chips" style={{ flexWrap: 'wrap', gap: '8px', display: 'flex' }}>
+                                <div className="filter-chips" style={{ gap: '8px', marginBottom: 0 }}>
                                     {classesList.map(cls => (
                                         <div
                                             key={cls}
@@ -855,9 +857,9 @@ export default function FeesManager({ currentUser, showToast }) {
                             </div>
                         </div>
                     ) : selectedStudent && (
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px', marginTop: '20px' }}>
+                        <div className="fees-grid" style={{ marginTop: '20px' }}>
                             {/* Dues Statement */}
-                            <div className="card">
+                            <div className="card student-dir-card">
                                 <div className="card-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <span style={{ display: 'flex', alignItems: 'center' }}>
                                         <Icons.Document size={16} style={{ marginRight: '6px' }} /> Dues Statement
@@ -932,7 +934,7 @@ export default function FeesManager({ currentUser, showToast }) {
                             </div>
 
                             {/* Collect Payment Form */}
-                            <div className="card">
+                            <div className="card student-dir-card">
                                 <div className="card-title" style={{ display: 'flex', alignItems: 'center' }}>
                                     <Icons.Fee size={16} style={{ marginRight: '6px' }} /> Collect Fee Payment
                                 </div>
@@ -966,7 +968,7 @@ export default function FeesManager({ currentUser, showToast }) {
 
                     {/* Recent Payments Table with CSV Download */}
                     {!selectedStudent && (
-                        <div className="card" style={{ marginTop: '20px', padding: '24px' }}>
+                        <div className="card student-dir-card" style={{ marginTop: '20px' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
                                 <div className="card-title" style={{ margin: 0, display: 'flex', alignItems: 'center' }}>
                                     <Icons.Document size={16} style={{ marginRight: '6px' }} /> Recent Fee Payments History
@@ -1057,7 +1059,7 @@ export default function FeesManager({ currentUser, showToast }) {
             {tab === 'structure' && isHighAccess && (
                 <div>
                     {editingConfig ? (
-                        <div className="card">
+                        <div className="card student-dir-card">
                             <div className="card-title" style={{ display: 'flex', alignItems: 'center' }}>
                                 <Icons.Edit size={16} style={{ marginRight: '6px' }} /> Edit Fee Config: Class {editingConfig.class_name}
                             </div>
@@ -1077,7 +1079,7 @@ export default function FeesManager({ currentUser, showToast }) {
                             </form>
                         </div>
                     ) : addingConfig ? (
-                        <div className="card">
+                        <div className="card student-dir-card">
                             <div className="card-title" style={{ display: 'flex', alignItems: 'center' }}>
                                 <Icons.Plus size={16} style={{ marginRight: '6px' }} /> Add Fee Config
                             </div>
@@ -1110,7 +1112,7 @@ export default function FeesManager({ currentUser, showToast }) {
                             )}
                         </div>
                     ) : (
-                        <div className="card">
+                        <div className="card student-dir-card">
                             <div className="card-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <span style={{ display: 'inline-flex', alignItems: 'center' }}>
                                     <Icons.Settings size={16} style={{ marginRight: '6px' }} /> School Fee Configurations

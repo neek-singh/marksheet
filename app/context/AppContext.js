@@ -108,22 +108,38 @@ export function AppContextProvider({ children }) {
     };
 
     const initAuth = async () => {
+        console.log('[AppContext] initAuth called');
         try {
-            const { data: { session } } = await db.auth.getSession();
-            await handleAuthStateChange(session);
+            const { data, error } = await db.auth.getSession();
+            if (error) {
+                console.error('[AppContext] Auth session retrieval error:', error.message);
+                // Clear the invalid session from localStorage to prevent persistent AuthApiError loops
+                try {
+                    await db.auth.signOut();
+                } catch (signOutError) {
+                    console.error('[AppContext] Error during signOut on session failure:', signOutError);
+                }
+                await handleAuthStateChange(null);
+                return;
+            }
+            console.log('[AppContext] Session retrieved successfully:', data?.session ? 'Session Exists' : 'No Session');
+            await handleAuthStateChange(data?.session || null);
 
-            db.auth.onAuthStateChange(async (_event, session) => {
+            db.auth.onAuthStateChange(async (event, session) => {
+                console.log('[AppContext] db.auth.onAuthStateChange fired. Event:', event, 'HasSession:', !!session);
                 await handleAuthStateChange(session);
             });
         } catch (e) {
-            console.error('Auth initialization error:', e);
+            console.error('[AppContext] Auth initialization error:', e);
             setAuthLoading(false);
         }
     };
 
     const handleAuthStateChange = async (session) => {
+        console.log('[AppContext] handleAuthStateChange. HasSession:', !!session);
         if (session) {
             try {
+                console.log('[AppContext] Fetching profile for user ID:', session.user.id);
                 let { data: profile } = await db
                     .from('profiles')
                     .select('*')
@@ -131,6 +147,7 @@ export function AppContextProvider({ children }) {
                     .single();
 
                 if (!profile) {
+                    console.log('[AppContext] Profile not found. Retrying in 1s...');
                     await new Promise(resolve => setTimeout(resolve, 1000));
                     const retry = await db
                         .from('profiles')
@@ -144,17 +161,19 @@ export function AppContextProvider({ children }) {
                     throw new Error('Database profile not found');
                 }
 
+                console.log('[AppContext] Profile loaded successfully:', profile);
                 setCurrentUser(profile);
                 await loadPersonalStudentData(profile);
                 
                 const role = profile.role?.toLowerCase() || 'assistant';
                 // If on root page, check default view. In Next.js router, we let the routing happen.
             } catch (e) {
-                console.error('Error fetching auth profile details:', e);
+                console.error('[AppContext] Error fetching auth profile details:', e);
                 showToast('Auth Details Error: ' + e.message, 'error');
                 db.auth.signOut();
             }
         } else {
+            console.log('[AppContext] No session, clearing user state');
             setCurrentUser(null);
             setPersonalStudent(null);
             setShowLogin(false);
@@ -262,7 +281,12 @@ export function AppContextProvider({ children }) {
 
     useEffect(() => {
         initAuth();
-    }, []);
+        // Prefetch all permitted routes for blazing fast navigation
+        const routes = ['/', '/students/admission', '/students', '/marksheet', '/search', '/attendance', '/fees', '/teachers', '/notices', '/promotion', '/download'];
+        routes.forEach(route => {
+            router.prefetch(route);
+        });
+    }, [router]);
 
     // Load activeSession from localStorage on client-side mount
     useEffect(() => {
@@ -282,10 +306,10 @@ export function AppContextProvider({ children }) {
     }, [activeSession]);
 
     useEffect(() => {
-        if (currentUser) {
+        if (currentUser && (pathname === '/' || pathname === '/marksheet')) {
             loadDashboardData();
         }
-    }, [currentUser, activeSession]);
+    }, [currentUser, activeSession, pathname]);
 
     const handleLogout = async () => {
         try {

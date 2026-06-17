@@ -1,11 +1,7 @@
 'use client';
 import React, { Suspense } from 'react';
 import { useAppContext } from '../context/AppContext';
-import dynamic from 'next/dynamic';
-
-const PromotionHub = dynamic(() => import('../../components/promotion/PromotionHub'), {
-    loading: () => <div className="loading" style={{ padding: '40px', textAlign: 'center' }}>Loading Promotion Hub...</div>
-});
+import PromotionHub from '../../components/promotion/PromotionHub';
 
 function PromotionPageContent() {
     const { currentUser } = useAppContext();

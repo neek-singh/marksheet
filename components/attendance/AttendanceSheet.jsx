@@ -114,14 +114,23 @@ export default function AttendanceSheet({ currentUser, showToast }) {
 
     // Trigger loads based on active tabs and filter changes
     useEffect(() => {
+        if (!currentUser) {
+            console.log('[AttendanceSheet] useEffect skipped because currentUser is null');
+            return;
+        }
+        console.log('[AttendanceSheet] useEffect triggered. isStudentOrParent:', isStudentOrParent, 'activeTab:', activeTab, 'selectedClass:', selectedClass, 'selectedDate:', selectedDate, 'currentUser:', currentUser);
         if (isStudentOrParent) {
+            console.log('[AttendanceSheet] Loading personal attendance');
             loadPersonalAttendance();
         } else {
             if (activeTab === 'take-attendance') {
+                console.log('[AttendanceSheet] Triggering loadAttendanceRegister');
                 loadAttendanceRegister();
             } else if (activeTab === 'monthly-grid') {
+                console.log('[AttendanceSheet] Triggering loadMonthlyGrid');
                 loadMonthlyGrid();
             } else if (activeTab === 'analytics') {
+                console.log('[AttendanceSheet] Triggering loadClassAnalytics');
                 loadClassAnalytics();
             }
         }
@@ -138,25 +147,38 @@ export default function AttendanceSheet({ currentUser, showToast }) {
     
     // Load daily register roster
     const loadAttendanceRegister = async () => {
+        console.log('[AttendanceSheet] loadAttendanceRegister called. selectedClass:', selectedClass, 'selectedDate:', selectedDate, 'currentUser:', currentUser);
         setLoading(true);
         try {
+            console.log('[AttendanceSheet] Fetching student list for class:', selectedClass);
             const { data: studentList, error: sErr } = await db
                 .from('students')
                 .select('id, name, roll_number')
                 .eq('class', selectedClass)
                 .order('name');
-            if (sErr) throw sErr;
+            
+            if (sErr) {
+                console.error('[AttendanceSheet] Student list fetch error:', sErr);
+                throw sErr;
+            }
+            console.log('[AttendanceSheet] Student list fetched successfully. Count:', studentList?.length);
 
             const studentIds = (studentList || []).map(s => s.id);
             let recordedMap = {};
 
             if (studentIds.length > 0) {
+                console.log('[AttendanceSheet] Fetching attendance records for date:', selectedDate, 'student count:', studentIds.length);
                 const { data: attendanceList, error: aErr } = await db
                     .from('attendance')
                     .select('*')
                     .eq('date', selectedDate)
                     .in('student_id', studentIds);
-                if (aErr) throw aErr;
+                
+                if (aErr) {
+                    console.error('[AttendanceSheet] Attendance records fetch error:', aErr);
+                    throw aErr;
+                }
+                console.log('[AttendanceSheet] Attendance records fetched successfully. Count:', attendanceList?.length);
 
                 attendanceList?.forEach(record => {
                     recordedMap[record.student_id] = record.status;
@@ -168,12 +190,14 @@ export default function AttendanceSheet({ currentUser, showToast }) {
                 initialMap[s.id] = recordedMap[s.id] || 'PRESENT';
             });
 
+            console.log('[AttendanceSheet] Setting students and attendance map');
             setStudents(studentList || []);
             setAttendanceMap(initialMap);
         } catch (e) {
-            console.error('Error loading attendance register:', e);
+            console.error('[AttendanceSheet] Error in loadAttendanceRegister:', e);
             showToast('Fetch Error: ' + e.message, 'error');
         } finally {
+            console.log('[AttendanceSheet] loadAttendanceRegister finally block. Setting loading to false');
             setLoading(false);
         }
     };
@@ -408,7 +432,7 @@ export default function AttendanceSheet({ currentUser, showToast }) {
                     </div>
                 </div>
 
-                <div className="card">
+                <div className="card student-dir-card">
                     <div className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" style={{ width: '20px', height: '20px', color: 'var(--gold)' }}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
@@ -508,17 +532,17 @@ export default function AttendanceSheet({ currentUser, showToast }) {
         : 0;
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div className="attendance-section" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <style>{SHIMMER_CSS}</style>
 
             {/* Class Stats Summary cards */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' }}>
+            <div className="attendance-stats-grid">
                 {loading && students.length === 0 ? (
                     <>{[1,2,3,4].map(i => <SkStatCard key={i} />)}</>
                 ) : (
                     <>
-                        <div className="stat-card" style={{ background: '#ffffff', border: '1px solid var(--border)', borderRadius: '12px', padding: '20px', display: 'flex', alignItems: 'center', gap: '16px', animation: 'att-fade 0.3s ease' }}>
-                            <div style={{ background: 'var(--cream)', width: '48px', height: '48px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <div className="stat-card attendance-stat-card">
+                            <div style={{ background: 'var(--cream)', width: '48px', height: '48px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="var(--charcoal)" style={{ width: '22px', height: '22px' }}>
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.109A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766v-.109A4.125 4.125 0 0 1 9.75 16.63a4.124 4.124 0 0 1 4.464 2.498ZM15 7.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
                                 </svg>
@@ -529,8 +553,8 @@ export default function AttendanceSheet({ currentUser, showToast }) {
                             </div>
                         </div>
 
-                        <div className="stat-card" style={{ background: '#ffffff', border: '1px solid var(--border)', borderRadius: '12px', padding: '20px', display: 'flex', alignItems: 'center', gap: '16px', animation: 'att-fade 0.3s ease' }}>
-                            <div style={{ background: 'rgba(34, 197, 94, 0.08)', width: '48px', height: '48px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <div className="stat-card attendance-stat-card">
+                            <div style={{ background: 'rgba(34, 197, 94, 0.08)', width: '48px', height: '48px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="var(--green)" style={{ width: '22px', height: '22px' }}>
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                                 </svg>
@@ -541,8 +565,8 @@ export default function AttendanceSheet({ currentUser, showToast }) {
                             </div>
                         </div>
 
-                        <div className="stat-card" style={{ background: '#ffffff', border: '1px solid var(--border)', borderRadius: '12px', padding: '20px', display: 'flex', alignItems: 'center', gap: '16px', animation: 'att-fade 0.3s ease' }}>
-                            <div style={{ background: 'rgba(239, 68, 68, 0.08)', width: '48px', height: '48px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <div className="stat-card attendance-stat-card">
+                            <div style={{ background: 'rgba(239, 68, 68, 0.08)', width: '48px', height: '48px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="var(--red)" style={{ width: '22px', height: '22px' }}>
                                     <path strokeLinecap="round" strokeLinejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                                 </svg>
@@ -553,8 +577,8 @@ export default function AttendanceSheet({ currentUser, showToast }) {
                             </div>
                         </div>
 
-                        <div className="stat-card" style={{ background: '#ffffff', border: '1px solid var(--border)', borderRadius: '12px', padding: '20px', display: 'flex', alignItems: 'center', gap: '16px', animation: 'att-fade 0.3s ease' }}>
-                            <div style={{ background: 'rgba(245, 158, 11, 0.08)', width: '48px', height: '48px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <div className="stat-card attendance-stat-card">
+                            <div style={{ background: 'rgba(245, 158, 11, 0.08)', width: '48px', height: '48px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="var(--gold)" style={{ width: '22px', height: '22px' }}>
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18 9 11.25l4.306 4.306a11.95 11.95 0 0 1 5.814-5.518l2.74-1.22m0 0-5.94-2.28m5.94 2.28-2.28 5.941" />
                                 </svg>
@@ -569,7 +593,7 @@ export default function AttendanceSheet({ currentUser, showToast }) {
             </div>
 
             {/* Tab Navigation Menu */}
-            <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', gap: '20px', paddingBottom: '2px' }}>
+            <div className="attendance-tabs">
                 <button
                     onClick={() => setActiveTab('take-attendance')}
                     style={{
@@ -637,7 +661,7 @@ export default function AttendanceSheet({ currentUser, showToast }) {
 
             {/* TAB 1: DAILY TAKE ATTENDANCE */}
             {activeTab === 'take-attendance' && (
-                <div className="card" style={{ padding: '24px' }}>
+                <div className="card student-dir-card">
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px', marginBottom: '20px' }}>
                         <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 750, display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" style={{ width: '20px', height: '20px', color: 'var(--gold)' }}>
@@ -648,7 +672,7 @@ export default function AttendanceSheet({ currentUser, showToast }) {
                     </div>
 
                     {/* Filter controls panel */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px', marginBottom: '20px' }}>
+                    <div className="attendance-controls">
                         <div className="form-group">
                             <label style={{ fontWeight: '700', color: 'var(--muted)', fontSize: '12px' }}>Select Class</label>
                             <select value={selectedClass} onChange={(e) => setSelectedClass(e.target.value)}>
@@ -666,7 +690,7 @@ export default function AttendanceSheet({ currentUser, showToast }) {
                                 max={new Date().toISOString().split('T')[0]}
                             />
                         </div>
-                        <div className="form-group" style={{ display: 'flex', gap: '8px', alignSelf: 'flex-end', justifyContent: 'flex-start' }}>
+                        <div className="form-group att-controls-btns" style={{ display: 'flex', gap: '8px', alignSelf: 'flex-end', justifyContent: 'flex-start' }}>
                             <button type="button" className="btn btn-secondary" style={{ padding: '8px 12px', fontSize: '12.5px' }} onClick={() => handleMarkAll('PRESENT')}>
                                 Mark All Present
                             </button>
@@ -732,6 +756,8 @@ export default function AttendanceSheet({ currentUser, showToast }) {
                                                             <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
                                                                 <button
                                                                     type="button"
+                                                                    className="att-btn att-btn-present"
+                                                                    data-short="P"
                                                                     onClick={() => handleStatusChange(s.id, 'PRESENT')}
                                                                     style={{
                                                                         flex: 1,
@@ -746,10 +772,12 @@ export default function AttendanceSheet({ currentUser, showToast }) {
                                                                         transition: 'all 0.2s ease'
                                                                     }}
                                                                 >
-                                                                    Present
+                                                                    <span className="att-btn-text">Present</span>
                                                                 </button>
                                                                 <button
                                                                     type="button"
+                                                                    className="att-btn att-btn-absent"
+                                                                    data-short="A"
                                                                     onClick={() => handleStatusChange(s.id, 'ABSENT')}
                                                                     style={{
                                                                         flex: 1,
@@ -764,10 +792,12 @@ export default function AttendanceSheet({ currentUser, showToast }) {
                                                                         transition: 'all 0.2s ease'
                                                                     }}
                                                                 >
-                                                                    Absent
+                                                                    <span className="att-btn-text">Absent</span>
                                                                 </button>
                                                                 <button
                                                                     type="button"
+                                                                    className="att-btn att-btn-leave"
+                                                                    data-short="L"
                                                                     onClick={() => handleStatusChange(s.id, 'LEAVE')}
                                                                     style={{
                                                                         flex: 1,
@@ -782,7 +812,7 @@ export default function AttendanceSheet({ currentUser, showToast }) {
                                                                         transition: 'all 0.2s ease'
                                                                     }}
                                                                 >
-                                                                    Leave
+                                                                    <span className="att-btn-text">Leave</span>
                                                                 </button>
                                                             </div>
                                                         </td>
@@ -831,7 +861,7 @@ export default function AttendanceSheet({ currentUser, showToast }) {
 
             {/* TAB 2: MONTHLY ATTENDANCE GRID */}
             {activeTab === 'monthly-grid' && (
-                <div className="card" style={{ padding: '24px' }}>
+                <div className="card student-dir-card">
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px', marginBottom: '20px' }}>
                         <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 750, display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" style={{ width: '20px', height: '20px', color: 'var(--gold)' }}>
@@ -842,7 +872,7 @@ export default function AttendanceSheet({ currentUser, showToast }) {
                     </div>
 
                     {/* Filter controls */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '15px', marginBottom: '25px' }}>
+                    <div className="attendance-controls">
                         <div className="form-group">
                             <label style={{ fontWeight: '700', color: 'var(--muted)', fontSize: '12px' }}>Class</label>
                             <select value={selectedClass} onChange={(e) => setSelectedClass(e.target.value)}>
@@ -992,7 +1022,7 @@ export default function AttendanceSheet({ currentUser, showToast }) {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                     
                     {/* Analytics Header stats row */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px' }}>
+                    <div className="analytics-stats-grid">
                         <div className="card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                             <div style={{ fontSize: '11px', color: 'var(--muted)', fontWeight: '700', textTransform: 'uppercase' }}>Class Average Attendance</div>
                             <div style={{ fontSize: '28px', fontWeight: '850', color: classAvgPct < 75 ? 'var(--red)' : classAvgPct >= 90 ? 'var(--green)' : 'var(--gold)' }}>
@@ -1024,8 +1054,8 @@ export default function AttendanceSheet({ currentUser, showToast }) {
                         </div>
                     </div>
 
-                    <div className="card" style={{ padding: '24px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                    <div className="card student-dir-card">
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '15px' }}>
                             <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 750, display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--red)' }}>
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" style={{ width: '20px', height: '20px' }}>
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />

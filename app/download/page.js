@@ -1,11 +1,7 @@
 'use client';
 import React, { Suspense } from 'react';
 import { useAppContext } from '../context/AppContext';
-import dynamic from 'next/dynamic';
-
-const DownloadHub = dynamic(() => import('../../components/download/DownloadHub'), {
-    loading: () => <div className="loading" style={{ padding: '40px', textAlign: 'center' }}>Loading Downloads Center...</div>
-});
+import DownloadHub from '../../components/download/DownloadHub';
 
 function DownloadPageContent() {
     const { currentUser } = useAppContext();

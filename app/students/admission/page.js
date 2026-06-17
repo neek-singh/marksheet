@@ -3,17 +3,13 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAppContext } from '../../context/AppContext';
 import { db } from '../../../lib/supabase';
-import dynamic from 'next/dynamic';
-
-const AdmissionForm = dynamic(() => import('../../../components/students/AdmissionForm'), {
-    loading: () => <div className="loading" style={{ padding: '40px', textAlign: 'center' }}>Loading Admission Form...</div>
-});
+import AdmissionForm from '../../../components/students/AdmissionForm';
 
 function AdmissionPageContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const studentId = searchParams.get('edit');
-    const { showToast } = useAppContext();
+    const { showToast, loadDashboardData } = useAppContext();
     const [editingStudent, setEditingStudent] = useState(null);
     const [loading, setLoading] = useState(false);
 
@@ -50,7 +46,10 @@ function AdmissionPageContent() {
         <AdmissionForm
             editingStudent={editingStudent}
             showToast={showToast}
-            onSaveSuccess={() => router.push('/')}
+            onSaveSuccess={async () => {
+                await loadDashboardData();
+                router.push('/');
+            }}
         />
     );
 }
